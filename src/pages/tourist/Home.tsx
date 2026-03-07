@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, Calendar, Users } from 'lucide-react';
+import { Search, MapPin, Calendar, Users, Map } from 'lucide-react';
 import { MOCK_GUIDES } from '../../data/mockData';
 import GuideCard from '../../components/shared/GuideCard';
+import NearbyGuidesMap from '../../components/tourist/NearbyGuidesMap';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMap, setShowMap] = useState(false);
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -68,8 +70,43 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Real-time Map Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Map className="text-[#1E6B4A]" />
+                Find Guides Nearby
+              </h2>
+              <p className="text-gray-500 mt-1">
+                See available guides around your current location in real-time.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className="bg-white border border-[#1E6B4A] text-[#1E6B4A] px-6 py-2 rounded-lg font-medium hover:bg-[#1E6B4A]/5 transition-colors"
+            >
+              {showMap ? 'Hide Map' : 'Show Map'}
+            </button>
+          </div>
+
+          {showMap ? (
+            <NearbyGuidesMap />
+          ) : (
+            <div 
+              className="h-64 bg-gray-50 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors border-2 border-dashed border-gray-200"
+              onClick={() => setShowMap(true)}
+            >
+              <Map className="h-12 w-12 text-gray-300 mb-3" />
+              <span className="text-gray-500 font-medium">Click to view nearby guides map</span>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Featured Guides Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <section className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div className="flex justify-between items-end mb-8">
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Guides</h2>

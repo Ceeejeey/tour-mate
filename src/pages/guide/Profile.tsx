@@ -127,6 +127,42 @@ export default function Profile() {
                 </div>
               </div>
 
+              {isEditing && (
+                <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Location Settings</h3>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Set your location to appear in the "Nearby Guides" map for tourists.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Latitude</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={guideUser?.latitude || ''}
+                        disabled
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-100"
+                        placeholder="7.2906"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Longitude</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={guideUser?.longitude || ''}
+                        disabled
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-100"
+                        placeholder="80.6337"
+                      />
+                    </div>
+                  </div>
+                  <button type="button" className="mt-3 text-xs text-[#1E6B4A] font-medium hover:underline">
+                    Use my current location
+                  </button>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Languages</label>
                 <div className="relative">

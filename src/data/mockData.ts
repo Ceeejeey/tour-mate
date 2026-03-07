@@ -25,7 +25,9 @@ export const MOCK_GUIDES: Guide[] = [
     isAvailable: true,
     serviceArea: 'Kandy & Central Highlands',
     bio: 'Experienced guide specializing in cultural heritage and wildlife tours in the central region.',
-    verified: true
+    verified: true,
+    latitude: 7.2906,
+    longitude: 80.6337 // Kandy
   },
   {
     id: 'g2',
@@ -43,7 +45,9 @@ export const MOCK_GUIDES: Guide[] = [
     isAvailable: true,
     serviceArea: 'Ella & Badulla',
     bio: 'Passionate about nature and hiking trails in Ella. I love showing tourists the hidden gems of Sri Lanka.',
-    verified: true
+    verified: true,
+    latitude: 6.8667,
+    longitude: 81.0467 // Ella
   },
   {
     id: 'g3',
@@ -61,7 +65,9 @@ export const MOCK_GUIDES: Guide[] = [
     isAvailable: false,
     serviceArea: 'Galle & South Coast',
     bio: 'Expert in colonial history and southern cuisine. Let me take you on a culinary journey through Galle Fort.',
-    verified: true
+    verified: true,
+    latitude: 6.0535,
+    longitude: 80.2210 // Galle
   },
   {
     id: 'g4',
@@ -79,7 +85,9 @@ export const MOCK_GUIDES: Guide[] = [
     isAvailable: true,
     serviceArea: 'Colombo',
     bio: 'City guide for Colombo. I know the best shopping spots and cultural landmarks in the capital.',
-    verified: true
+    verified: true,
+    latitude: 6.9271,
+    longitude: 79.8612 // Colombo
   },
   {
     id: 'g5',
@@ -97,7 +105,9 @@ export const MOCK_GUIDES: Guide[] = [
     isAvailable: true,
     serviceArea: 'Arugam Bay & East Coast',
     bio: 'Surf instructor and adventure guide on the East Coast. Ready for some waves?',
-    verified: false
+    verified: false,
+    latitude: 6.8412,
+    longitude: 81.8368 // Arugam Bay
   },
   {
     id: 'g6',
@@ -115,7 +125,9 @@ export const MOCK_GUIDES: Guide[] = [
     isAvailable: true,
     serviceArea: 'Anuradhapura & Polonnaruwa',
     bio: 'Budget-friendly guide for backpackers exploring the ancient cities.',
-    verified: true
+    verified: true,
+    latitude: 8.3114,
+    longitude: 80.4037 // Anuradhapura
   },
   {
     id: 'g7',
@@ -133,7 +145,9 @@ export const MOCK_GUIDES: Guide[] = [
     isAvailable: true,
     serviceArea: 'Nuwara Eliya',
     bio: 'Specializing in tea plantation tours and relaxing getaways in Little England.',
-    verified: true
+    verified: true,
+    latitude: 6.9497,
+    longitude: 80.7891 // Nuwara Eliya
   },
   {
     id: 'g8',
@@ -151,7 +165,9 @@ export const MOCK_GUIDES: Guide[] = [
     isAvailable: true,
     serviceArea: 'Yala & Udawalawe',
     bio: 'Professional safari guide. I can help you spot leopards and elephants in the wild.',
-    verified: true
+    verified: true,
+    latitude: 6.3686,
+    longitude: 81.5222 // Yala
   }
 ];
 

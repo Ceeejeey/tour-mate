@@ -21,6 +21,8 @@ export interface Guide extends User {
   serviceArea: string;
   bio: string;
   verified: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Booking {
