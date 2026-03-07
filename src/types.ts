@@ -1,0 +1,73 @@
+export type Role = 'tourist' | 'guide' | 'admin';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  phone?: string;
+  nationality?: string;
+  avatar?: string;
+}
+
+export interface Guide extends User {
+  languages: string[];
+  experience: string;
+  skills: string[];
+  rating: number;
+  reviewCount: number;
+  pricePerDay: number;
+  isAvailable: boolean;
+  serviceArea: string;
+  bio: string;
+  verified: boolean;
+}
+
+export interface Booking {
+  id: string;
+  touristId: string;
+  guideId: string;
+  startDate: string;
+  endDate: string;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  totalPrice: number;
+  notes?: string;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  timestamp: string;
+  read: boolean;
+}
+
+export interface Payment {
+  id: string;
+  bookingId: string;
+  amount: number;
+  date: string;
+  status: 'pending' | 'completed' | 'failed';
+  method: string;
+}
+
+export interface Review {
+  id: string;
+  bookingId: string;
+  guideId: string;
+  touristId: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+export interface Complaint {
+  id: string;
+  bookingId: string;
+  touristId: string;
+  guideId: string;
+  reason: string;
+  status: 'pending' | 'resolved' | 'dismissed';
+  date: string;
+}

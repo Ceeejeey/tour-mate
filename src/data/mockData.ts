@@ -1,0 +1,209 @@
+import { User, Guide, Booking, Message, Payment, Review, Complaint } from '../types';
+
+export const MOCK_TOURISTS: User[] = [
+  { id: 't1', name: 'Alice Johnson', email: 'alice@example.com', role: 'tourist', phone: '+1234567890', nationality: 'USA', avatar: 'https://i.pravatar.cc/150?img=1' },
+  { id: 't2', name: 'Bob Smith', email: 'bob@example.com', role: 'tourist', phone: '+1987654321', nationality: 'UK', avatar: 'https://i.pravatar.cc/150?img=2' },
+  { id: 't3', name: 'Charlie Brown', email: 'charlie@example.com', role: 'tourist', phone: '+1122334455', nationality: 'Canada', avatar: 'https://i.pravatar.cc/150?img=3' },
+  { id: 't4', name: 'Diana Prince', email: 'diana@example.com', role: 'tourist', phone: '+1555666777', nationality: 'Australia', avatar: 'https://i.pravatar.cc/150?img=4' },
+  { id: 't5', name: 'Evan Wright', email: 'evan@example.com', role: 'tourist', phone: '+1444333222', nationality: 'Germany', avatar: 'https://i.pravatar.cc/150?img=5' },
+];
+
+export const MOCK_GUIDES: Guide[] = [
+  {
+    id: 'g1',
+    name: 'Kamal Perera',
+    email: 'kamal@example.com',
+    role: 'guide',
+    phone: '+94771234567',
+    avatar: 'https://i.pravatar.cc/150?img=11',
+    languages: ['English', 'Sinhala'],
+    experience: '5 years',
+    skills: ['History', 'Wildlife', 'Photography'],
+    rating: 4.8,
+    reviewCount: 124,
+    pricePerDay: 50,
+    isAvailable: true,
+    serviceArea: 'Kandy & Central Highlands',
+    bio: 'Experienced guide specializing in cultural heritage and wildlife tours in the central region.',
+    verified: true
+  },
+  {
+    id: 'g2',
+    name: 'Nimali Silva',
+    email: 'nimali@example.com',
+    role: 'guide',
+    phone: '+94779876543',
+    avatar: 'https://i.pravatar.cc/150?img=5',
+    languages: ['English', 'German'],
+    experience: '3 years',
+    skills: ['Hiking', 'Nature', 'Bird Watching'],
+    rating: 4.5,
+    reviewCount: 89,
+    pricePerDay: 45,
+    isAvailable: true,
+    serviceArea: 'Ella & Badulla',
+    bio: 'Passionate about nature and hiking trails in Ella. I love showing tourists the hidden gems of Sri Lanka.',
+    verified: true
+  },
+  {
+    id: 'g3',
+    name: 'Rohan De Silva',
+    email: 'rohan@example.com',
+    role: 'guide',
+    phone: '+94712345678',
+    avatar: 'https://i.pravatar.cc/150?img=12',
+    languages: ['English', 'French', 'Sinhala'],
+    experience: '8 years',
+    skills: ['History', 'Architecture', 'Food Tours'],
+    rating: 4.9,
+    reviewCount: 210,
+    pricePerDay: 60,
+    isAvailable: false,
+    serviceArea: 'Galle & South Coast',
+    bio: 'Expert in colonial history and southern cuisine. Let me take you on a culinary journey through Galle Fort.',
+    verified: true
+  },
+  {
+    id: 'g4',
+    name: 'Priya Gamage',
+    email: 'priya@example.com',
+    role: 'guide',
+    phone: '+94701234567',
+    avatar: 'https://i.pravatar.cc/150?img=9',
+    languages: ['English', 'Japanese'],
+    experience: '4 years',
+    skills: ['Culture', 'Shopping', 'City Tours'],
+    rating: 4.7,
+    reviewCount: 150,
+    pricePerDay: 55,
+    isAvailable: true,
+    serviceArea: 'Colombo',
+    bio: 'City guide for Colombo. I know the best shopping spots and cultural landmarks in the capital.',
+    verified: true
+  },
+  {
+    id: 'g5',
+    name: 'Saman Kumara',
+    email: 'saman@example.com',
+    role: 'guide',
+    phone: '+94761234567',
+    avatar: 'https://i.pravatar.cc/150?img=13',
+    languages: ['English', 'Russian'],
+    experience: '6 years',
+    skills: ['Adventure', 'Surfing', 'Beaches'],
+    rating: 4.6,
+    reviewCount: 95,
+    pricePerDay: 50,
+    isAvailable: true,
+    serviceArea: 'Arugam Bay & East Coast',
+    bio: 'Surf instructor and adventure guide on the East Coast. Ready for some waves?',
+    verified: false
+  },
+  {
+    id: 'g6',
+    name: 'Dilshan Fernando',
+    email: 'dilshan@example.com',
+    role: 'guide',
+    phone: '+94751234567',
+    avatar: 'https://i.pravatar.cc/150?img=14',
+    languages: ['English', 'Sinhala', 'Tamil'],
+    experience: '2 years',
+    skills: ['Budget Tours', 'Backpacking'],
+    rating: 4.3,
+    reviewCount: 40,
+    pricePerDay: 30,
+    isAvailable: true,
+    serviceArea: 'Anuradhapura & Polonnaruwa',
+    bio: 'Budget-friendly guide for backpackers exploring the ancient cities.',
+    verified: true
+  },
+  {
+    id: 'g7',
+    name: 'Anusha Jayasuriya',
+    email: 'anusha@example.com',
+    role: 'guide',
+    phone: '+94721234567',
+    avatar: 'https://i.pravatar.cc/150?img=10',
+    languages: ['English', 'Chinese'],
+    experience: '5 years',
+    skills: ['Tea Plantations', 'Relaxation'],
+    rating: 4.8,
+    reviewCount: 110,
+    pricePerDay: 55,
+    isAvailable: true,
+    serviceArea: 'Nuwara Eliya',
+    bio: 'Specializing in tea plantation tours and relaxing getaways in Little England.',
+    verified: true
+  },
+  {
+    id: 'g8',
+    name: 'Mahesh Bandara',
+    email: 'mahesh@example.com',
+    role: 'guide',
+    phone: '+94781234567',
+    avatar: 'https://i.pravatar.cc/150?img=15',
+    languages: ['English', 'Italian'],
+    experience: '7 years',
+    skills: ['Wildlife', 'Safari'],
+    rating: 4.9,
+    reviewCount: 180,
+    pricePerDay: 65,
+    isAvailable: true,
+    serviceArea: 'Yala & Udawalawe',
+    bio: 'Professional safari guide. I can help you spot leopards and elephants in the wild.',
+    verified: true
+  }
+];
+
+export const MOCK_BOOKINGS: Booking[] = [
+  { id: 'b1', touristId: 't1', guideId: 'g1', startDate: '2023-10-15', endDate: '2023-10-17', status: 'completed', totalPrice: 150, notes: 'Interested in Temple of the Tooth' },
+  { id: 'b2', touristId: 't2', guideId: 'g2', startDate: '2023-11-01', endDate: '2023-11-02', status: 'confirmed', totalPrice: 90, notes: 'Hiking Little Adam\'s Peak' },
+  { id: 'b3', touristId: 't3', guideId: 'g3', startDate: '2023-11-05', endDate: '2023-11-05', status: 'pending', totalPrice: 60, notes: 'Food tour in Galle' },
+  { id: 'b4', touristId: 't1', guideId: 'g4', startDate: '2023-11-10', endDate: '2023-11-11', status: 'cancelled', totalPrice: 110, notes: 'City tour' },
+  { id: 'b5', touristId: 't4', guideId: 'g1', startDate: '2023-12-01', endDate: '2023-12-03', status: 'confirmed', totalPrice: 150, notes: 'Kandy cultural tour' },
+  { id: 'b6', touristId: 't5', guideId: 'g5', startDate: '2023-12-10', endDate: '2023-12-12', status: 'pending', totalPrice: 150, notes: 'Surfing lessons' },
+  { id: 'b7', touristId: 't2', guideId: 'g6', startDate: '2023-12-15', endDate: '2023-12-16', status: 'completed', totalPrice: 60, notes: 'Ancient city tour' },
+  { id: 'b8', touristId: 't3', guideId: 'g7', startDate: '2023-12-20', endDate: '2023-12-21', status: 'confirmed', totalPrice: 110, notes: 'Tea factory visit' },
+  { id: 'b9', touristId: 't1', guideId: 'g8', startDate: '2024-01-05', endDate: '2024-01-06', status: 'pending', totalPrice: 130, notes: 'Yala Safari' },
+  { id: 'b10', touristId: 't4', guideId: 'g2', startDate: '2024-01-10', endDate: '2024-01-12', status: 'cancelled', totalPrice: 135, notes: 'Ella hiking' }
+];
+
+export const MOCK_MESSAGES: Message[] = [
+  { id: 'm1', senderId: 't1', receiverId: 'g1', content: 'Hi Kamal, are you available on Oct 15th?', timestamp: '2023-10-01T10:00:00Z', read: true },
+  { id: 'm2', senderId: 'g1', receiverId: 't1', content: 'Yes Alice, I am available. What would you like to see?', timestamp: '2023-10-01T10:05:00Z', read: true },
+  { id: 'm3', senderId: 't1', receiverId: 'g1', content: 'I want to visit the Temple of the Tooth.', timestamp: '2023-10-01T10:10:00Z', read: true },
+  { id: 'm4', senderId: 't2', receiverId: 'g2', content: 'Hello Nimali, do you do group tours?', timestamp: '2023-10-20T09:00:00Z', read: false },
+  { id: 'm5', senderId: 'g2', receiverId: 't2', content: 'Hi Bob, yes I do. How many people?', timestamp: '2023-10-20T09:15:00Z', read: false }
+];
+
+export const MOCK_PAYMENTS: Payment[] = [
+  { id: 'p1', bookingId: 'b1', amount: 150, date: '2023-10-14', status: 'completed', method: 'Credit Card' },
+  { id: 'p2', bookingId: 'b2', amount: 90, date: '2023-10-30', status: 'completed', method: 'PayPal' },
+  { id: 'p3', bookingId: 'b5', amount: 150, date: '2023-11-28', status: 'completed', method: 'Credit Card' },
+  { id: 'p4', bookingId: 'b7', amount: 60, date: '2023-12-14', status: 'completed', method: 'Credit Card' },
+  { id: 'p5', bookingId: 'b8', amount: 110, date: '2023-12-19', status: 'completed', method: 'PayPal' },
+  { id: 'p6', bookingId: 'b1', amount: 150, date: '2023-10-14', status: 'completed', method: 'Credit Card' },
+  { id: 'p7', bookingId: 'b2', amount: 90, date: '2023-10-30', status: 'completed', method: 'PayPal' },
+  { id: 'p8', bookingId: 'b5', amount: 150, date: '2023-11-28', status: 'completed', method: 'Credit Card' }
+];
+
+export const MOCK_REVIEWS: Review[] = [
+  { id: 'r1', bookingId: 'b1', guideId: 'g1', touristId: 't1', rating: 5, comment: 'Kamal was fantastic! Very knowledgeable.', date: '2023-10-18' },
+  { id: 'r2', bookingId: 'b7', guideId: 'g6', touristId: 't2', rating: 4, comment: 'Good tour, but a bit rushed.', date: '2023-12-17' },
+  { id: 'r3', bookingId: 'b1', guideId: 'g1', touristId: 't1', rating: 5, comment: 'Highly recommend Kamal.', date: '2023-10-18' },
+  { id: 'r4', bookingId: 'b7', guideId: 'g6', touristId: 't2', rating: 3, comment: 'Okay experience.', date: '2023-12-17' },
+  { id: 'r5', bookingId: 'b1', guideId: 'g1', touristId: 't1', rating: 5, comment: 'Best guide ever!', date: '2023-10-18' },
+  { id: 'r6', bookingId: 'b7', guideId: 'g6', touristId: 't2', rating: 4, comment: 'Nice person.', date: '2023-12-17' },
+  { id: 'r7', bookingId: 'b1', guideId: 'g1', touristId: 't1', rating: 5, comment: 'Great service.', date: '2023-10-18' },
+  { id: 'r8', bookingId: 'b7', guideId: 'g6', touristId: 't2', rating: 2, comment: 'Not what I expected.', date: '2023-12-17' },
+  { id: 'r9', bookingId: 'b1', guideId: 'g1', touristId: 't1', rating: 5, comment: 'Loved it!', date: '2023-10-18' },
+  { id: 'r10', bookingId: 'b7', guideId: 'g6', touristId: 't2', rating: 4, comment: 'Good value.', date: '2023-12-17' }
+];
+
+export const MOCK_COMPLAINTS: Complaint[] = [
+  { id: 'c1', bookingId: 'b4', touristId: 't1', guideId: 'g4', reason: 'Guide did not show up', status: 'pending', date: '2023-11-11' },
+  { id: 'c2', bookingId: 'b10', touristId: 't4', guideId: 'g2', reason: 'Rude behavior', status: 'resolved', date: '2024-01-11' },
+  { id: 'c3', bookingId: 'b4', touristId: 't1', guideId: 'g4', reason: 'Late arrival', status: 'pending', date: '2023-11-11' },
+  { id: 'c4', bookingId: 'b10', touristId: 't4', guideId: 'g2', reason: 'Changed itinerary', status: 'resolved', date: '2024-01-11' },
+  { id: 'c5', bookingId: 'b4', touristId: 't1', guideId: 'g4', reason: 'Asked for extra money', status: 'pending', date: '2023-11-11' }
+];
