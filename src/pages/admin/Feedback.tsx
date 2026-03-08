@@ -1,7 +1,7 @@
-import React from 'react';
-import { MOCK_REVIEWS } from '../../data/mockData';
-import StarRating from '../../components/shared/StarRating';
-import { formatDate } from '../../lib/utils';
+import React from "react";
+import { MOCK_REVIEWS } from "../../data/mockData";
+import StarRating from "../../components/shared/StarRating";
+import { formatDate } from "../../lib/utils";
 
 export default function Feedback() {
   return (
@@ -23,11 +23,19 @@ export default function Feedback() {
             <tbody className="divide-y divide-gray-100">
               {MOCK_REVIEWS.map((review) => (
                 <tr key={review.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{formatDate(review.date)}</td>
-                  <td className="px-6 py-4 text-gray-600">{review.touristId}</td>
+                  <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+                    {formatDate(review.date)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {review.touristId}
+                  </td>
                   <td className="px-6 py-4 text-gray-600">{review.guideId}</td>
                   <td className="px-6 py-4">
-                    <StarRating rating={review.rating} showCount={false} size={14} />
+                    <StarRating
+                      rating={review.rating}
+                      showCount={false}
+                      size={14}
+                    />
                   </td>
                   <td className="px-6 py-4 text-gray-600 max-w-md truncate">
                     {review.comment}
