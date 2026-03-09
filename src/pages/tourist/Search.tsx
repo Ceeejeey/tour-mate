@@ -22,7 +22,7 @@ export default function Search() {
                          guide.serviceArea.toLowerCase().includes(query.toLowerCase());
     const matchesLanguage = selectedLanguages.length === 0 || 
                             selectedLanguages.some(lang => guide.languages.includes(lang));
-    const matchesPrice = guide.pricePerDay >= priceRange[0] && guide.pricePerDay <= priceRange[1];
+    const matchesPrice = guide.pricePerSession >= priceRange[0] && guide.pricePerSession <= priceRange[1];
     const matchesRating = guide.rating >= minRating;
 
     return matchesQuery && matchesLanguage && matchesPrice && matchesRating;
@@ -49,7 +49,7 @@ export default function Search() {
 
             {/* Price Range */}
             <div className="mb-6">
-              <h3 className="font-medium text-sm text-gray-900 mb-3">Price per Day</h3>
+              <h3 className="font-medium text-sm text-gray-900 mb-3">Price per Session</h3>
               <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                 <span>${priceRange[0]}</span>
                 <span>-</span>
@@ -62,7 +62,7 @@ export default function Search() {
                 step="10"
                 value={priceRange[1]}
                 onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1E6B4A]"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-forest-600"
               />
             </div>
 
@@ -76,7 +76,7 @@ export default function Search() {
                       type="checkbox"
                       checked={selectedLanguages.includes(lang)}
                       onChange={() => toggleLanguage(lang)}
-                      className="rounded border-gray-300 text-[#1E6B4A] focus:ring-[#1E6B4A]"
+                      className="rounded border-gray-300 text-forest-600 focus:ring-forest-500"
                     />
                     <span className="ml-2 text-sm text-gray-600">{lang}</span>
                   </label>
@@ -95,7 +95,7 @@ export default function Search() {
                       name="rating"
                       checked={minRating === rating}
                       onChange={() => setMinRating(rating)}
-                      className="border-gray-300 text-[#1E6B4A] focus:ring-[#1E6B4A]"
+                      className="border-gray-300 text-forest-600 focus:ring-forest-500"
                     />
                     <span className="ml-2 text-sm text-gray-600">{rating}+ Stars</span>
                   </label>
@@ -106,7 +106,7 @@ export default function Search() {
                     name="rating"
                     checked={minRating === 0}
                     onChange={() => setMinRating(0)}
-                    className="border-gray-300 text-[#1E6B4A] focus:ring-[#1E6B4A]"
+                    className="border-gray-300 text-forest-600 focus:ring-forest-500"
                   />
                   <span className="ml-2 text-sm text-gray-600">Any</span>
                 </label>
@@ -129,7 +129,7 @@ export default function Search() {
                   placeholder="Search by name or location..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A]"
+                  className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600"
                 />
               </div>
               <button
@@ -157,7 +157,7 @@ export default function Search() {
                   setPriceRange([0, 200]);
                   setMinRating(0);
                 }}
-                className="mt-4 text-[#1E6B4A] font-medium hover:underline"
+                className="mt-4 text-forest-600 font-medium hover:underline"
               >
                 Clear all filters
               </button>

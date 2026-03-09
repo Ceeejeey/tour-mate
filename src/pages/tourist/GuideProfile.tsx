@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MOCK_GUIDES, MOCK_REVIEWS } from '../../data/mockData';
 import StarRating from '../../components/shared/StarRating';
-import { MapPin, Languages, Calendar, CheckCircle, MessageCircle, Shield, Award } from 'lucide-react';
+import { MapPin, Languages, Zap, CheckCircle, MessageCircle, Shield, Award } from 'lucide-react';
 import NotFound from '../NotFound';
 
 export default function GuideProfile() {
@@ -16,7 +16,7 @@ export default function GuideProfile() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-        <div className="h-48 bg-[#1E6B4A]/10 relative">
+        <div className="h-48 bg-forest-600/10 relative">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
         </div>
         <div className="px-8 pb-8 relative">
@@ -49,8 +49,8 @@ export default function GuideProfile() {
             </div>
             <div className="flex flex-col gap-3 w-full md:w-auto">
               <div className="text-right hidden md:block">
-                <span className="text-3xl font-bold text-[#1E6B4A]">${guide.pricePerDay}</span>
-                <span className="text-gray-500 text-sm">/day</span>
+                <span className="text-3xl font-bold text-forest-600">${guide.pricePerSession}</span>
+                <span className="text-gray-500 text-sm">/session</span>
               </div>
               <div className="flex gap-3">
                 <Link
@@ -62,9 +62,9 @@ export default function GuideProfile() {
                 </Link>
                 <Link
                   to={`/tourist/booking/new?guideId=${guide.id}`}
-                  className="flex-1 md:flex-none px-6 py-2.5 bg-[#1E6B4A] text-white rounded-xl font-medium hover:bg-[#165a3d] transition-colors shadow-sm flex items-center justify-center gap-2"
+                  className="flex-1 md:flex-none px-6 py-2.5 bg-forest-600 text-white rounded-xl font-medium hover:bg-forest-700 transition-colors shadow-sm flex items-center justify-center gap-2"
                 >
-                  <Calendar size={18} />
+                  <Zap size={18} />
                   Book Now
                 </Link>
               </div>
@@ -84,14 +84,14 @@ export default function GuideProfile() {
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-2 text-gray-900 font-medium">
-                  <Award className="text-[#F5A623]" size={20} />
+                  <Award className="text-earth-400" size={20} />
                   Experience
                 </div>
                 <p className="text-gray-600 text-sm">{guide.experience}</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-2 text-gray-900 font-medium">
-                  <Shield className="text-[#1E6B4A]" size={20} />
+                  <Shield className="text-forest-600" size={20} />
                   Expertise
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -137,45 +137,26 @@ export default function GuideProfile() {
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
             <h3 className="font-bold text-gray-900 mb-4">Availability</h3>
-            {/* Mock Calendar Visualization */}
-            <div className="grid grid-cols-7 gap-1 text-center text-sm mb-4">
-              {['S','M','T','W','T','F','S'].map((d,i) => (
-                <div key={i} className="text-gray-400 font-medium py-1">{d}</div>
-              ))}
-              {Array.from({ length: 30 }).map((_, i) => {
-                const isAvailable = Math.random() > 0.3;
-                return (
-                  <div
-                    key={i}
-                    className={`aspect-square flex items-center justify-center rounded-md text-xs ${
-                      isAvailable 
-                        ? 'bg-green-50 text-green-700 hover:bg-green-100 cursor-pointer' 
-                        : 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    {i + 1}
-                  </div>
-                );
-              })}
-            </div>
-            
-            <div className="flex items-center gap-4 text-xs text-gray-500 mb-6">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-green-100 rounded-sm"></div> Available
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-gray-100 rounded-sm"></div> Booked
-              </div>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className={`w-3 h-3 rounded-full ${guide.isAvailable ? 'bg-green-500' : 'bg-gray-400'}`} />
+              <span className={`font-medium ${guide.isAvailable ? 'text-green-700' : 'text-gray-500'}`}>
+                {guide.isAvailable ? 'Available Now' : 'Currently Unavailable'}
+              </span>
             </div>
 
             <Link
               to={`/tourist/booking/new?guideId=${guide.id}`}
-              className="w-full block text-center bg-[#1E6B4A] text-white py-3 rounded-xl font-bold hover:bg-[#165a3d] transition-colors shadow-sm"
+              className={`w-full block text-center py-3 rounded-xl font-bold transition-colors shadow-sm ${
+                guide.isAvailable
+                  ? 'bg-forest-600 text-white hover:bg-forest-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed pointer-events-none'
+              }`}
             >
-              Book {guide.name}
+              {guide.isAvailable ? `Book ${guide.name} Now` : 'Unavailable'}
             </Link>
             <p className="text-center text-xs text-gray-400 mt-3">
-              No payment required until booking is confirmed.
+              Instant booking. No payment required until confirmed.
             </p>
           </div>
         </div>

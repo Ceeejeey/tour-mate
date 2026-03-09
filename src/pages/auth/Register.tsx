@@ -26,7 +26,7 @@ export default function Register() {
     <div className="min-h-[90vh] flex items-center justify-center px-4 py-12">
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-2xl w-full border border-gray-100">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-[#1E6B4A] mb-2">Create an Account</h1>
+          <h1 className="text-2xl font-bold text-forest-600 mb-2">Create an Account</h1>
           <p className="text-gray-500">Join TourMate today</p>
         </div>
 
@@ -37,7 +37,7 @@ export default function Register() {
             onClick={() => setRole('tourist')}
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
               role === 'tourist'
-                ? 'bg-white text-[#1E6B4A] shadow-sm'
+                ? 'bg-white text-forest-600 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -48,7 +48,7 @@ export default function Register() {
             onClick={() => setRole('guide')}
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
               role === 'guide'
-                ? 'bg-white text-[#1E6B4A] shadow-sm'
+                ? 'bg-white text-forest-600 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -66,7 +66,7 @@ export default function Register() {
                 </div>
                 <input
                   type="text"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="John Doe"
                   required
                 />
@@ -81,7 +81,7 @@ export default function Register() {
                 </div>
                 <input
                   type="email"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="you@example.com"
                   required
                 />
@@ -96,7 +96,7 @@ export default function Register() {
                 </div>
                 <input
                   type="tel"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="+94 77 123 4567"
                   required
                 />
@@ -112,7 +112,7 @@ export default function Register() {
                   </div>
                   <input
                     type="text"
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                     placeholder="Sri Lankan"
                     required
                   />
@@ -127,7 +127,7 @@ export default function Register() {
                   </div>
                   <input
                     type="text"
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                     placeholder="e.g. Kandy, Ella"
                     required
                   />
@@ -143,7 +143,7 @@ export default function Register() {
                 </div>
                 <input
                   type="password"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="••••••••"
                   required
                 />
@@ -156,7 +156,7 @@ export default function Register() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Languages Spoken</label>
                   <input
                     type="text"
-                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                     placeholder="English, Sinhala, Tamil (comma separated)"
                     required
                   />
@@ -165,18 +165,18 @@ export default function Register() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Experience & Skills</label>
                   <textarea
                     rows={3}
-                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                     placeholder="Tell us about your experience and skills..."
                     required
                   />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Profile Photo</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-[#1E6B4A] transition-colors cursor-pointer bg-gray-50">
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-forest-600 transition-colors cursor-pointer bg-gray-50">
                     <div className="space-y-1 text-center">
                       <Upload className="mx-auto h-12 w-12 text-gray-400" />
                       <div className="flex text-sm text-gray-600">
-                        <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-[#1E6B4A] hover:text-[#165a3d] focus-within:outline-none">
+                        <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-forest-600 hover:text-forest-700 focus-within:outline-none">
                           <span>Upload a file</span>
                           <input id="file-upload" name="file-upload" type="file" className="sr-only" />
                         </label>
@@ -195,18 +195,18 @@ export default function Register() {
               id="terms"
               name="terms"
               type="checkbox"
-              className="h-4 w-4 text-[#1E6B4A] focus:ring-[#1E6B4A] border-gray-300 rounded"
+              className="h-4 w-4 text-forest-600 focus:ring-forest-500 border-gray-300 rounded"
               required
             />
             <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-              I agree to the <a href="#" className="text-[#1E6B4A] hover:underline">Terms of Service</a> and <a href="#" className="text-[#1E6B4A] hover:underline">Privacy Policy</a>
+              I agree to the <a href="#" className="text-forest-600 hover:underline">Terms of Service</a> and <a href="#" className="text-forest-600 hover:underline">Privacy Policy</a>
             </label>
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#1E6B4A] hover:bg-[#165a3d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E6B4A] disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? (
               <Loader2 className="animate-spin h-5 w-5" />
@@ -218,7 +218,7 @@ export default function Register() {
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-[#1E6B4A] hover:text-[#165a3d]">
+          <Link to="/login" className="font-medium text-forest-600 hover:text-forest-700">
             Log in
           </Link>
         </p>

@@ -14,7 +14,7 @@ export default function NotFound() {
       </p>
       <Link
         to="/"
-        className="bg-[#1E6B4A] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#165a3d] transition-colors shadow-sm"
+        className="bg-forest-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-forest-700 transition-colors shadow-sm"
       >
         Go Back Home
       </Link>

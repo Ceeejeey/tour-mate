@@ -11,7 +11,7 @@ export default function Users() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="p-6 lg:p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Tourists Management</h1>
         <div className="relative w-64">
@@ -20,7 +20,7 @@ export default function Users() {
             placeholder="Search tourists..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A]"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600"
           />
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
         </div>
@@ -75,7 +75,7 @@ export default function Users() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-[#1E6B4A] hover:underline font-medium">Edit</button>
+                    <button className="text-forest-600 hover:underline font-medium">Edit</button>
                   </td>
                 </tr>
               ))}

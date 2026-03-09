@@ -41,7 +41,7 @@ export default function Payment() {
           <div className="space-y-3">
             <button
               onClick={() => navigate('/tourist/bookings')}
-              className="w-full py-3 px-4 bg-[#1E6B4A] text-white rounded-lg font-medium hover:bg-[#165a3d] transition-colors"
+              className="w-full py-3 px-4 bg-forest-600 text-white rounded-lg font-medium hover:bg-forest-700 transition-colors"
             >
               View My Bookings
             </button>
@@ -58,7 +58,7 @@ export default function Payment() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="p-6 lg:p-8 max-w-3xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Secure Checkout</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -80,7 +80,7 @@ export default function Payment() {
                 <div className="relative">
                   <input
                     type="text"
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A]"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600"
                     placeholder="0000 0000 0000 0000"
                     required
                   />
@@ -93,7 +93,7 @@ export default function Payment() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Expiration Date</label>
                   <input
                     type="text"
-                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A]"
+                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600"
                     placeholder="MM / YY"
                     required
                   />
@@ -102,7 +102,7 @@ export default function Payment() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
                   <input
                     type="text"
-                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A]"
+                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600"
                     placeholder="123"
                     required
                   />
@@ -113,7 +113,7 @@ export default function Payment() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
                 <input
                   type="text"
-                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A]"
+                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600"
                   placeholder="John Doe"
                   required
                 />
@@ -122,7 +122,7 @@ export default function Payment() {
               <button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#1E6B4A] hover:bg-[#165a3d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E6B4A] disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
               >
                 {isProcessing ? (
                   <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ export default function Payment() {
 
             <div className="flex justify-between items-center pt-4 border-t border-gray-200">
               <span className="font-bold text-gray-900">Total</span>
-              <span className="text-xl font-bold text-[#1E6B4A]">{formatCurrency(booking.totalPrice)}</span>
+              <span className="text-xl font-bold text-forest-600">{formatCurrency(booking.totalPrice)}</span>
             </div>
           </div>
         </div>

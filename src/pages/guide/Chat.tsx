@@ -49,7 +49,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-[calc(100vh-64px)]">
+    <div className="p-6 lg:p-8 h-[calc(100vh-64px)]">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden h-full flex">
         {/* Sidebar */}
         <div className="w-full md:w-80 border-r border-gray-100 flex flex-col h-full">
@@ -58,7 +58,7 @@ export default function Chat() {
               <input
                 type="text"
                 placeholder="Search messages..."
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#1E6B4A]/20 text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-forest-500/20 text-sm"
               />
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             </div>
@@ -70,7 +70,7 @@ export default function Chat() {
                 key={tourist?.id}
                 onClick={() => setActiveChatId(tourist?.id || null)}
                 className={`w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
-                  activeChatId === tourist?.id ? 'bg-[#1E6B4A]/5 border-r-4 border-[#1E6B4A]' : ''
+                  activeChatId === tourist?.id ? 'bg-forest-600/5 border-r-4 border-forest-600' : ''
                 }`}
               >
                 <div className="relative">
@@ -136,7 +136,7 @@ export default function Chat() {
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${
                           isMe
-                            ? 'bg-[#1E6B4A] text-white rounded-br-none'
+                            ? 'bg-forest-600 text-white rounded-br-none'
                             : 'bg-white text-gray-800 rounded-bl-none'
                         }`}
                       >
@@ -159,12 +159,12 @@ export default function Chat() {
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#1E6B4A]/20"
+                    className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-forest-500/20"
                   />
                   <button
                     type="submit"
                     disabled={!messageInput.trim()}
-                    className="bg-[#1E6B4A] text-white p-3 rounded-xl hover:bg-[#165a3d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    className="bg-forest-600 text-white p-3 rounded-xl hover:bg-forest-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
                   >
                     <Send size={20} />
                   </button>

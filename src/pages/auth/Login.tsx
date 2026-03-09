@@ -24,7 +24,7 @@ export default function Login() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full border border-gray-100">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-[#1E6B4A] mb-2">Welcome Back</h1>
+          <h1 className="text-2xl font-bold text-forest-600 mb-2">Welcome Back</h1>
           <p className="text-gray-500">Log in to your TourMate account</p>
         </div>
 
@@ -38,7 +38,7 @@ export default function Login() {
                 onClick={() => setRole(r)}
                 className={`flex-1 py-2 text-sm font-medium rounded-md capitalize transition-all ${
                   role === r
-                    ? 'bg-white text-[#1E6B4A] shadow-sm'
+                    ? 'bg-white text-forest-600 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -58,7 +58,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="you@example.com"
                   required
                 />
@@ -75,7 +75,7 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="••••••••"
                   required
                 />
@@ -89,13 +89,13 @@ export default function Login() {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-[#1E6B4A] focus:ring-[#1E6B4A] border-gray-300 rounded"
+                className="h-4 w-4 text-forest-600 focus:ring-forest-500 border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-gray-500">
                 Remember me
               </label>
             </div>
-            <a href="#" className="font-medium text-[#1E6B4A] hover:text-[#165a3d]">
+            <a href="#" className="font-medium text-forest-600 hover:text-forest-700">
               Forgot password?
             </a>
           </div>
@@ -103,7 +103,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#1E6B4A] hover:bg-[#165a3d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1E6B4A] disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-forest-600 hover:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? (
               <Loader2 className="animate-spin h-5 w-5" />
@@ -145,7 +145,7 @@ export default function Login() {
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <Link to="/register" className="font-medium text-[#1E6B4A] hover:text-[#165a3d]">
+          <Link to="/register" className="font-medium text-forest-600 hover:text-forest-700">
             Sign up
           </Link>
         </p>

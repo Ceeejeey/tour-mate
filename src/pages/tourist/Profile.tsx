@@ -22,12 +22,12 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="p-6 lg:p-8 max-w-4xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">My Profile</h1>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Cover Image */}
-        <div className="h-32 bg-[#1E6B4A]/10"></div>
+        <div className="h-32 bg-forest-600/10"></div>
         
         <div className="px-8 pb-8">
           <div className="relative flex justify-between items-end -mt-12 mb-6">
@@ -38,7 +38,7 @@ export default function Profile() {
                 className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover"
               />
               {isEditing && (
-                <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-[#1E6B4A]">
+                <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-forest-600">
                   <Camera size={16} />
                 </button>
               )}
@@ -66,7 +66,7 @@ export default function Profile() {
                     disabled={!isEditing}
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] disabled:bg-gray-50 disabled:text-gray-500"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 disabled:bg-gray-50 disabled:text-gray-500"
                   />
                 </div>
               </div>
@@ -82,7 +82,7 @@ export default function Profile() {
                     disabled={!isEditing}
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] disabled:bg-gray-50 disabled:text-gray-500"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 disabled:bg-gray-50 disabled:text-gray-500"
                   />
                 </div>
               </div>
@@ -98,7 +98,7 @@ export default function Profile() {
                     disabled={!isEditing}
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] disabled:bg-gray-50 disabled:text-gray-500"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 disabled:bg-gray-50 disabled:text-gray-500"
                   />
                 </div>
               </div>
@@ -114,7 +114,7 @@ export default function Profile() {
                     disabled={!isEditing}
                     value={formData.nationality}
                     onChange={(e) => setFormData({...formData, nationality: e.target.value})}
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] disabled:bg-gray-50 disabled:text-gray-500"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 disabled:bg-gray-50 disabled:text-gray-500"
                   />
                 </div>
               </div>
@@ -126,7 +126,7 @@ export default function Profile() {
                   disabled={!isEditing}
                   value={formData.bio}
                   onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#1E6B4A] focus:border-[#1E6B4A] disabled:bg-gray-50 disabled:text-gray-500"
+                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 disabled:bg-gray-50 disabled:text-gray-500"
                 />
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function Profile() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#1E6B4A] text-white rounded-lg text-sm font-medium hover:bg-[#165a3d]"
+                  className="px-4 py-2 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-700"
                 >
                   Save Changes
                 </button>

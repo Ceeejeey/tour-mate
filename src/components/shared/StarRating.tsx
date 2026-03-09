@@ -15,7 +15,7 @@ export default function StarRating({ rating, count, size = 16, showCount = true 
 
   return (
     <div className="flex items-center gap-1">
-      <div className="flex text-[#F5A623]">
+      <div className="flex text-earth-400">
         {[...Array(fullStars)].map((_, i) => (
           <Star key={`full-${i}`} size={size} fill="currentColor" />
         ))}

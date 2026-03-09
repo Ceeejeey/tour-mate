@@ -103,7 +103,7 @@ export default function NearbyGuidesMap() {
       {isLoading && (
         <div className="absolute inset-0 bg-white/80 z-[1000] flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="animate-spin text-[#1E6B4A]" size={32} />
+            <Loader2 className="animate-spin text-forest-600" size={32} />
             <span className="text-gray-600 font-medium">Locating you...</span>
           </div>
         </div>
@@ -167,14 +167,14 @@ export default function NearbyGuidesMap() {
                 </div>
                 <p className="text-xs text-gray-600 mb-2 line-clamp-2">{guide.bio}</p>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-bold text-[#1E6B4A] text-sm">${guide.pricePerDay}/day</span>
+                  <span className="font-bold text-forest-600 text-sm">${guide.pricePerSession}/session</span>
                   <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">
                     ★ {guide.rating}
                   </span>
                 </div>
                 <Link
                   to={`/tourist/guide/${guide.id}`}
-                  className="block w-full bg-[#1E6B4A] text-white text-center py-1.5 rounded text-xs font-medium hover:bg-[#165a3d]"
+                  className="block w-full bg-forest-600 text-white text-center py-1.5 rounded text-xs font-medium hover:bg-forest-700"
                 >
                   View Profile
                 </Link>

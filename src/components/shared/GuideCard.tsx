@@ -10,15 +10,15 @@ interface GuideCardProps {
 
 export default function GuideCard({ guide }: GuideCardProps) {
   return (
-    <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col h-full">
+    <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-forest-100 overflow-hidden flex flex-col h-full">
       <div className="relative h-48 overflow-hidden">
         <img
           src={guide.avatar}
           alt={guide.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-[#1E6B4A] shadow-sm">
-          ${guide.pricePerDay}/day
+        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-forest-600 shadow-sm">
+          ${guide.pricePerSession}/session
         </div>
         {guide.verified && (
           <div className="absolute top-3 left-3 bg-blue-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 shadow-sm">
@@ -38,11 +38,11 @@ export default function GuideCard({ guide }: GuideCardProps) {
 
         <div className="space-y-2 text-sm text-gray-600 mb-4 flex-grow">
           <div className="flex items-center gap-2">
-            <MapPin size={16} className="text-[#F5A623]" />
+            <MapPin size={16} className="text-earth-400" />
             <span className="truncate">{guide.serviceArea}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Languages size={16} className="text-[#F5A623]" />
+            <Languages size={16} className="text-earth-400" />
             <span className="truncate">{guide.languages.join(', ')}</span>
           </div>
         </div>
@@ -50,13 +50,13 @@ export default function GuideCard({ guide }: GuideCardProps) {
         <div className="flex gap-2 mt-auto">
           <Link
             to={`/tourist/guide/${guide.id}`}
-            className="flex-1 bg-white border border-[#1E6B4A] text-[#1E6B4A] py-2 rounded-lg text-sm font-medium hover:bg-[#1E6B4A]/5 transition-colors text-center"
+            className="flex-1 bg-white border border-forest-600 text-forest-600 py-2 rounded-lg text-sm font-medium hover:bg-forest-600/5 transition-colors text-center"
           >
             View Profile
           </Link>
           <Link
             to={`/tourist/booking/new?guideId=${guide.id}`}
-            className="flex-1 bg-[#1E6B4A] text-white py-2 rounded-lg text-sm font-medium hover:bg-[#165a3d] transition-colors text-center shadow-sm"
+            className="flex-1 bg-forest-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-forest-700 transition-colors text-center shadow-sm"
           >
             Book Now
           </Link>

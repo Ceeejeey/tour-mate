@@ -16,7 +16,7 @@ export interface Guide extends User {
   skills: string[];
   rating: number;
   reviewCount: number;
-  pricePerDay: number;
+  pricePerSession: number;
   isAvailable: boolean;
   serviceArea: string;
   bio: string;
@@ -29,8 +29,7 @@ export interface Booking {
   id: string;
   touristId: string;
   guideId: string;
-  startDate: string;
-  endDate: string;
+  bookingDate: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   totalPrice: number;
   notes?: string;

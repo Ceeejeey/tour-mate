@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MOCK_BOOKINGS, MOCK_TOURISTS } from '../../data/mockData';
 import StatusBadge from '../../components/shared/StatusBadge';
-import { formatCurrency, formatDate } from '../../lib/utils';
+import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { Check, X, Calendar, User, DollarSign, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -9,7 +9,7 @@ export default function Bookings() {
   const guideId = 'g1'; // Mock current guide
   const [bookings, setBookings] = useState(
     MOCK_BOOKINGS.filter(b => b.guideId === guideId)
-      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime())
   );
 
   const handleStatusChange = (bookingId: string, newStatus: 'confirmed' | 'cancelled') => {
@@ -21,7 +21,7 @@ export default function Bookings() {
   const getTourist = (id: string) => MOCK_TOURISTS.find(t => t.id === id);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="p-6 lg:p-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Manage Bookings</h1>
 
       <div className="space-y-6">
@@ -51,10 +51,10 @@ export default function Bookings() {
                   <div>
                     <div className="flex items-center gap-2 text-gray-600 mb-1">
                       <Calendar size={16} />
-                      <span className="text-sm font-medium">Dates</span>
+                      <span className="text-sm font-medium">Booked On</span>
                     </div>
                     <div className="text-gray-900">
-                      {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
+                      {formatDateTime(booking.bookingDate)}
                     </div>
                   </div>
                   
@@ -89,7 +89,7 @@ export default function Bookings() {
                     <>
                       <button
                         onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[#1E6B4A] text-white text-sm font-medium rounded-lg hover:bg-[#165a3d] transition-colors"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-forest-600 text-white text-sm font-medium rounded-lg hover:bg-forest-700 transition-colors"
                       >
                         <Check size={16} />
                         Accept

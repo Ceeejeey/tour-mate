@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MOCK_BOOKINGS, MOCK_GUIDES } from '../../data/mockData';
 import StatusBadge from '../../components/shared/StatusBadge';
-import { formatCurrency, formatDate } from '../../lib/utils';
+import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { Calendar, MapPin, MessageCircle, CreditCard } from 'lucide-react';
 
 export default function Bookings() {
@@ -12,12 +12,12 @@ export default function Bookings() {
   const getGuide = (id: string) => MOCK_GUIDES.find(g => g.id === id);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="p-6 lg:p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
         <Link
           to="/tourist/search"
-          className="bg-[#1E6B4A] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#165a3d] transition-colors"
+          className="bg-forest-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-forest-700 transition-colors"
         >
           Book New Trip
         </Link>
@@ -51,10 +51,10 @@ export default function Bookings() {
                   {/* Booking Details */}
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Dates</div>
+                      <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Booked On</div>
                       <div className="flex items-center gap-2 text-gray-900 font-medium">
                         <Calendar size={16} className="text-gray-400" />
-                        <span>{formatDate(booking.startDate)} - {formatDate(booking.endDate)}</span>
+                        <span>{formatDateTime(booking.bookingDate)}</span>
                       </div>
                     </div>
                     <div>
@@ -72,7 +72,7 @@ export default function Bookings() {
                     {booking.status === 'confirmed' && (
                       <Link
                         to={`/tourist/payment?bookingId=${booking.id}`}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[#1E6B4A] text-white text-sm font-medium rounded-lg hover:bg-[#165a3d]"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-forest-600 text-white text-sm font-medium rounded-lg hover:bg-forest-700"
                       >
                         <CreditCard size={16} />
                         Pay Now
@@ -93,7 +93,7 @@ export default function Bookings() {
         ) : (
           <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
             <p className="text-gray-500 mb-4">You haven't booked any trips yet.</p>
-            <Link to="/tourist/search" className="text-[#1E6B4A] font-medium hover:underline">
+            <Link to="/tourist/search" className="text-forest-600 font-medium hover:underline">
               Find a guide to get started
             </Link>
           </div>

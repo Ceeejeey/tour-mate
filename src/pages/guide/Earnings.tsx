@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { MOCK_BOOKINGS } from '../../data/mockData';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { DollarSign, TrendingUp, Calendar } from 'lucide-react';
 
 export default function Earnings() {
@@ -10,7 +10,7 @@ export default function Earnings() {
 
   // Calculate monthly earnings
   const monthlyData = myBookings.reduce((acc, booking) => {
-    const month = new Date(booking.startDate).toLocaleString('default', { month: 'short' });
+    const month = new Date(booking.bookingDate).toLocaleString('default', { month: 'short' });
     const existing = acc.find(d => d.name === month);
     if (existing) {
       existing.amount += booking.totalPrice;
@@ -29,7 +29,7 @@ export default function Earnings() {
   const currentMonthEarnings = monthlyData[monthlyData.length - 1]?.amount || 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="p-6 lg:p-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Earnings & Analytics</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -77,7 +77,7 @@ export default function Earnings() {
                 formatter={(value: number) => [formatCurrency(value), 'Earnings']}
                 cursor={{ fill: '#f3f4f6' }}
               />
-              <Bar dataKey="amount" fill="#1E6B4A" radius={[4, 4, 0, 0]} barSize={40} />
+              <Bar dataKey="amount" fill="#2D8F5E" radius={[4, 4, 0, 0]} barSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -101,7 +101,7 @@ export default function Earnings() {
             <tbody className="divide-y divide-gray-100">
               {myBookings.map((booking) => (
                 <tr key={booking.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-gray-900">{booking.endDate}</td>
+                  <td className="px-6 py-4 text-gray-900">{formatDateTime(booking.bookingDate)}</td>
                   <td className="px-6 py-4 text-gray-500">#{booking.id.toUpperCase()}</td>
                   <td className="px-6 py-4 text-gray-900">Tour Service Payment</td>
                   <td className="px-6 py-4 text-right font-medium text-gray-900">
