@@ -34,7 +34,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Role Selection Tabs */}
           <div className="flex bg-gray-100 p-1 rounded-lg mb-6">
-            {(['tourist', 'guide', 'admin'] as Role[]).map((r) => (
+            {(['tourist', 'guide'] as Role[]).map((r) => (
               <button
                 key={r}
                 type="button"

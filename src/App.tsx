@@ -8,6 +8,7 @@ import NotFound from './pages/NotFound';
 
 // Auth Pages
 import Login from './pages/auth/Login';
+import AdminLogin from './pages/auth/AdminLogin';
 import Register from './pages/auth/Register';
 
 // Tourist Pages
@@ -88,6 +89,7 @@ function AppRoutes() {
       {/* Public Routes - website feel with Navbar + Footer */}
       <Route path="/" element={<Navigate to="/tourist/home" replace />} />
       <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
+      <Route path="/admin/login" element={<PublicLayout><AdminLogin /></PublicLayout>} />
       <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
       <Route path="/tourist/home" element={<PublicLayout><TouristHome /></PublicLayout>} />
       <Route path="/tourist/search" element={<PublicLayout><TouristSearch /></PublicLayout>} />

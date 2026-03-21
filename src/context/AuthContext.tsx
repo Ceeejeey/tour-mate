@@ -50,13 +50,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, role: Role, password?: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5066/api/auth/login', {
+      // Determine the endpoint based on the requested role
+      const endpoint = role === 'admin' 
+        ? 'http://localhost:5066/api/auth/admin-login' 
+        : 'http://localhost:5066/api/auth/login';
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: password || 'defaultpassword' })
       });
       
-      if (!response.ok) throw new Error('Login failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+      
       const data = await response.json();
       localStorage.setItem('tourmate_token', data.token);
       await fetchProfile(data.token);
