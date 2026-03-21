@@ -4,8 +4,9 @@ import { User, Mail, Phone, MapPin, Languages, Award, Upload, Camera, Navigation
 import { Guide } from '../../types';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth() as any;
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Mock state for form fields - casting user to Guide for demo purposes
   // In a real app, we'd have proper type guards
@@ -28,10 +29,43 @@ export default function Profile() {
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsEditing(false);
-    // Update logic
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem('tourmate_token');
+      const response = await fetch('http://localhost:5066/api/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...formData,
+          isAvailable,
+          latitude,
+          longitude
+        })
+      });
+
+      if (response.ok) {
+        setIsEditing(false);
+        const updatedUser = { 
+          ...guideUser, 
+          ...formData, 
+          languages: formData.languages.split(',').map((s: string)=>s.trim()), 
+          isAvailable, latitude, longitude 
+        };
+        updateUser(updatedUser);
+      } else {
+        alert("Failed to update profile");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleGetLocation = () => {

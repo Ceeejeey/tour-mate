@@ -3,8 +3,9 @@ import { useAuth } from '../../context/AuthContext';
 import { User, Mail, Phone, MapPin, Globe, Camera } from 'lucide-react';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth() as any;
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Mock state for form fields
   const [formData, setFormData] = useState({
@@ -12,13 +13,44 @@ export default function Profile() {
     email: user?.email || '',
     phone: user?.phone || '',
     nationality: user?.nationality || '',
-    bio: 'I love traveling and exploring new cultures.',
+    bio: user?.bio || 'I love traveling and exploring new cultures.',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsEditing(false);
-    // In a real app, we would update the user context/backend here
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem('tourmate_token');
+      const response = await fetch('http://localhost:5066/api/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          nationality: formData.nationality,
+          bio: formData.bio
+        })
+      });
+
+      if (response.ok) {
+        setIsEditing(false);
+        const updatedUser = { 
+          ...user, 
+          ...formData
+        };
+        updateUser(updatedUser);
+      } else {
+        alert("Failed to update profile");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

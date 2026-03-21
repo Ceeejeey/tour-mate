@@ -7,19 +7,34 @@ import { Role } from '../../types';
 export default function Register() {
   const [role, setRole] = useState<Role>('tourist');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { register } = useAuth() as any;
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      login('newuser@example.com', role);
+    
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    
+    try {
+      await register({
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        role,
+        phone: formData.get('phoneNumber'),
+        nationality: formData.get('nationality'),
+        serviceArea: formData.get('serviceArea'),
+        languages: formData.get('languages'),
+        experience: formData.get('experienceSkills')
+      });
+      navigate('/login');
+    } catch (err: any) {
+      alert(err.message || 'Registration failed');
+    } finally {
       setIsLoading(false);
-      if (role === 'tourist') navigate('/tourist/home');
-      else navigate('/guide/dashboard');
-    }, 1500);
+    }
   };
 
   return (
@@ -65,6 +80,7 @@ export default function Register() {
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  name="name"
                   type="text"
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="John Doe"
@@ -80,6 +96,7 @@ export default function Register() {
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  name="email"
                   type="email"
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="you@example.com"
@@ -95,6 +112,7 @@ export default function Register() {
                   <Phone className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  name="phoneNumber"
                   type="tel"
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="+94 77 123 4567"
@@ -111,6 +129,7 @@ export default function Register() {
                     <Globe className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    name="nationality"
                     type="text"
                     className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                     placeholder="Sri Lankan"
@@ -126,6 +145,7 @@ export default function Register() {
                     <MapPin className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    name="serviceArea"
                     type="text"
                     className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                     placeholder="e.g. Kandy, Ella"
@@ -142,6 +162,7 @@ export default function Register() {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  name="password"
                   type="password"
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                   placeholder="••••••••"
@@ -155,6 +176,7 @@ export default function Register() {
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Languages Spoken</label>
                   <input
+                    name="languages"
                     type="text"
                     className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
                     placeholder="English, Sinhala, Tamil (comma separated)"
@@ -164,9 +186,10 @@ export default function Register() {
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Experience & Skills</label>
                   <textarea
+                    name="experienceSkills"
                     rows={3}
                     className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
-                    placeholder="Tell us about your experience and skills..."
+                    placeholder="Tell us about your experience and skills... (e.g. 5 years experience)"
                     required
                   />
                 </div>

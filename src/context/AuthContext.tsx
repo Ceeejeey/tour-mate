@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Guide, Role } from '../types';
-import { MOCK_TOURISTS, MOCK_GUIDES } from '../data/mockData';
 
 interface AuthContextType {
   user: User | Guide | null;
-  login: (email: string, role: Role) => void;
+  login: (email: string, role: Role, password?: string) => Promise<void>;
+  register: (data: any) => Promise<void>;
   logout: () => void;
+  updateUser: (userData: any) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -16,50 +17,87 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | Guide | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate checking local storage
-    const storedUser = localStorage.getItem('tourmate_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  const fetchProfile = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:5066/api/users/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const userData = await response.json();
+        const formattedUser = {
+          ...userData,
+          id: userData.id.toString(),
+          role: userData.role.toLowerCase() as Role
+        };
+        setUser(formattedUser);
+        localStorage.setItem('tourmate_user', JSON.stringify(formattedUser));
+        return formattedUser;
+      }
+    } catch (e) {
+      console.error("Failed to fetch profile", e);
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('tourmate_token');
+    if (token) {
+      fetchProfile(token).finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
-  const login = (email: string, role: Role) => {
+  const login = async (email: string, role: Role, password?: string) => {
     setIsLoading(true);
-    // Mock login logic
-    setTimeout(() => {
-      let foundUser: User | Guide | undefined;
+    try {
+      const response = await fetch('http://localhost:5066/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: password || 'defaultpassword' })
+      });
       
-      if (role === 'admin') {
-        foundUser = {
-          id: 'admin1',
-          name: 'Admin User',
-          email: 'admin@tourmate.com',
-          role: 'admin',
-          avatar: 'https://ui-avatars.com/api/?name=Admin+User'
-        };
-      } else if (role === 'guide') {
-        foundUser = MOCK_GUIDES.find(g => g.email === email) || MOCK_GUIDES[0]; // Fallback for demo
-      } else {
-        foundUser = MOCK_TOURISTS.find(t => t.email === email) || MOCK_TOURISTS[0]; // Fallback for demo
-      }
-
-      if (foundUser) {
-        setUser(foundUser);
-        localStorage.setItem('tourmate_user', JSON.stringify(foundUser));
-      }
+      if (!response.ok) throw new Error('Login failed');
+      const data = await response.json();
+      localStorage.setItem('tourmate_token', data.token);
+      await fetchProfile(data.token);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
+  };
+
+  const register = async (data: any) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5066/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('tourmate_user');
+    localStorage.removeItem('tourmate_token');
+  };
+
+  const updateUser = (userData: any) => {
+    setUser(userData);
+    localStorage.setItem('tourmate_user', JSON.stringify(userData));
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, isAuthenticated: !!user, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

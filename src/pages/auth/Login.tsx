@@ -13,11 +13,14 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, role);
-    
-    if (role === 'tourist') navigate('/tourist/home');
-    else if (role === 'guide') navigate('/guide/dashboard');
-    else if (role === 'admin') navigate('/admin/dashboard');
+    try {
+      await login(email, role, password);
+      if (role === 'tourist') navigate('/tourist/home');
+      else if (role === 'guide') navigate('/guide/dashboard');
+      else if (role === 'admin') navigate('/admin/dashboard');
+    } catch (err: any) {
+      alert("Login failed. Please check credentials.");
+    }
   };
 
   return (
