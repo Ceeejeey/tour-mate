@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, Phone, MapPin, Languages, Award, Upload, Camera, Navigation, Loader2 } from 'lucide-react';
 import { Guide } from '../../types';
+import toast from 'react-hot-toast';
 
 export default function Profile() {
   const { user, updateUser } = useAuth() as any;
@@ -29,9 +30,105 @@ export default function Profile() {
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
+  // Store original values to track changes
+  const [originalData, setOriginalData] = useState({
+    name: guideUser?.name || '',
+    email: guideUser?.email || '',
+    phone: guideUser?.phone || '',
+    serviceArea: guideUser?.serviceArea || '',
+    languages: guideUser?.languages?.join(', ') || '',
+    experience: guideUser?.experience || '',
+    bio: guideUser?.bio || '',
+    pricePerSession: guideUser?.pricePerSession || 50,
+    isAvailable: guideUser?.isAvailable ?? true,
+    latitude: guideUser?.latitude || null,
+    longitude: guideUser?.longitude || null,
+  });
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setOriginalData({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      serviceArea: formData.serviceArea,
+      languages: formData.languages,
+      experience: formData.experience,
+      bio: formData.bio,
+      pricePerSession: formData.pricePerSession,
+      isAvailable,
+      latitude,
+      longitude,
+    });
+  };
+
+  const getChangedFields = () => {
+    const changes: string[] = [];
+    const fieldLabels: Record<string, string> = {
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone number',
+      serviceArea: 'Service area',
+      languages: 'Languages',
+      experience: 'Experience',
+      bio: 'Bio',
+      pricePerSession: 'Price per session',
+      isAvailable: 'Availability status',
+      latitude: 'Location',
+      longitude: 'Location'
+    };
+
+    Object.keys(formData).forEach((key) => {
+      const fieldKey = key as keyof typeof formData;
+      if (formData[fieldKey] !== originalData[fieldKey]) {
+        changes.push(fieldLabels[fieldKey]);
+      }
+    });
+
+    if (isAvailable !== originalData.isAvailable && !changes.includes('Availability status')) {
+      changes.push('Availability status');
+    }
+
+    if ((latitude !== originalData.latitude || longitude !== originalData.longitude) && !changes.includes('Location')) {
+      changes.push('Location');
+    }
+
+    // Remove duplicates
+    return [...new Set(changes)];
+  };
+
+  const handleAvailabilityToggle = () => {
+    const newStatus = !isAvailable;
+    setIsAvailable(newStatus);
+
+    if (newStatus) {
+      toast.success('Availability status set to Available', {
+        style: { background: '#f0fdf4', color: '#166534', border: '1px solid #86efac' }
+      });
+    } else {
+      toast('Availability status set to Unavailable', {
+        icon: '⏸️',
+        style: { background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+
+    const changedFields = getChangedFields();
+
+    if (changedFields.length === 0) {
+      toast('No changes detected', {
+        icon: 'ℹ️',
+        style: { background: '#eff6ff', color: '#1e40af', border: '1px solid #93c5fd' }
+      });
+      setIsSaving(false);
+      setIsEditing(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('tourmate_token');
       const response = await fetch('http://localhost:5066/api/users/me', {
@@ -50,19 +147,33 @@ export default function Profile() {
 
       if (response.ok) {
         setIsEditing(false);
-        const updatedUser = { 
-          ...guideUser, 
-          ...formData, 
-          languages: formData.languages.split(',').map((s: string)=>s.trim()), 
-          isAvailable, latitude, longitude 
+        const updatedUser = {
+          ...guideUser,
+          ...formData,
+          languages: formData.languages.split(',').map((s: string)=>s.trim()),
+          isAvailable, latitude, longitude
         };
         updateUser(updatedUser);
+
+        // Show specific toast for each changed field
+        changedFields.forEach((field, index) => {
+          setTimeout(() => {
+            toast.success(`${field} updated successfully!`, {
+              style: { background: '#f0fdf4', color: '#166534', border: '1px solid #86efac' }
+            });
+          }, index * 150);
+        });
       } else {
-        alert("Failed to update profile");
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to update profile', {
+          style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' }
+        });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to update profile");
+      toast.error(err.message || 'Failed to update profile. Please try again.', {
+        style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' }
+      });
     } finally {
       setIsSaving(false);
     }
@@ -70,7 +181,11 @@ export default function Profile() {
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser.');
+      const error = 'Geolocation is not supported by your browser.';
+      setLocationError(error);
+      toast.error(error, {
+        style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' }
+      });
       return;
     }
 
@@ -82,10 +197,17 @@ export default function Profile() {
         setLatitude(position.coords.latitude);
         setLongitude(position.coords.longitude);
         setIsLocating(false);
+        toast.success('Location retrieved successfully!', {
+          style: { background: '#f0fdf4', color: '#166534', border: '1px solid #86efac' }
+        });
       },
       () => {
-        setLocationError('Unable to retrieve your location. Please check your browser permissions.');
+        const error = 'Unable to retrieve your location. Please check your browser permissions.';
+        setLocationError(error);
         setIsLocating(false);
+        toast.error(error, {
+          style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' }
+        });
       }
     );
   };
@@ -96,7 +218,7 @@ export default function Profile() {
         <h1 className="text-2xl font-bold text-gray-900">Guide Profile</h1>
         {!isEditing && (
           <button
-            onClick={() => setIsEditing(true)}
+            onClick={handleEditClick}
             className="bg-forest-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-forest-700 transition-colors"
           >
             Edit Profile
@@ -138,7 +260,7 @@ export default function Profile() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setIsAvailable(!isAvailable)}
+                    onClick={handleAvailabilityToggle}
                     className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${
                       isAvailable ? 'bg-green-500' : 'bg-gray-300'
                     }`}
@@ -339,15 +461,18 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  disabled={isSaving}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-700"
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-700 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Save Changes
+                  {isSaving && <Loader2 className="animate-spin h-4 w-4" />}
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             )}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { Toaster } from 'react-hot-toast';
 import Navbar from './components/shared/Navbar';
 import Footer from './components/shared/Footer';
 import AppLayout from './components/shared/AppLayout';
@@ -85,8 +86,10 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
 
 function AppRoutes() {
   return (
-    <Routes>
-      {/* Public Routes - website feel with Navbar + Footer */}
+    <>
+      <Toaster position="top-right" />
+      <Routes>
+        {/* Public Routes - website feel with Navbar + Footer */}
       <Route path="/" element={<Navigate to="/tourist/home" replace />} />
       <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
       <Route path="/admin/login" element={<PublicLayout><AdminLogin /></PublicLayout>} />
@@ -188,6 +191,7 @@ function AppRoutes() {
 
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   );
 }
 

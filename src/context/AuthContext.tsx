@@ -77,13 +77,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (data: any) => {
+  const register = async (data: FormData) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5066/api/auth/register', {
+      const endpoint = data.get('role') === 'guide' 
+        ? 'http://localhost:5066/api/auth/register/guide' 
+        : 'http://localhost:5066/api/auth/register/tourist';
+
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: data
       });
       if (!response.ok) {
         const errorData = await response.json();

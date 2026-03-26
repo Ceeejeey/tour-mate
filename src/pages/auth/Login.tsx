@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { Role } from '../../types';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const [email, setEmail] = useState('alice@example.com');
@@ -13,13 +14,27 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Frontend Validation
+    if (!email || !password) {
+      toast.error('Email and Password are required', { position: 'top-right', style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' } });
+      return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Please enter a valid email format', { position: 'top-right', style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' } });
+      return;
+    }
+
     try {
       await login(email, role, password);
+      toast.success('Successfully logged in!', { position: 'top-right' });
       if (role === 'tourist') navigate('/tourist/home');
       else if (role === 'guide') navigate('/guide/dashboard');
       else if (role === 'admin') navigate('/admin/dashboard');
     } catch (err: any) {
-      alert("Login failed. Please check credentials.");
+      toast.error(err.message || 'Login failed. Please check credentials.', { position: 'top-right', style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' } });
     }
   };
 
@@ -125,22 +140,15 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6 grid grid-cols-1 gap-3">
               <button
                 type="button"
-                className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                className="w-full inline-flex items-center justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
                 </svg>
-              </button>
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
-                </svg>
+                <span className="ml-2">Continue with Google</span>
               </button>
             </div>
           </div>

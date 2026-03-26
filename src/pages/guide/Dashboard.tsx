@@ -5,6 +5,23 @@ import { useAuth } from '../../context/AuthContext';
 import { Users, Calendar, DollarSign, Star, TrendingUp, Clock, MapPin, TreePine, Navigation, Loader2 } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
 import { Guide } from '../../types';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, PieChart, Pie } from 'recharts';
+
+const mockEarningsData = [
+  { name: 'Mon', earnings: 150 },
+  { name: 'Tue', earnings: 230 },
+  { name: 'Wed', earnings: 180 },
+  { name: 'Thu', earnings: 290 },
+  { name: 'Fri', earnings: 340 },
+  { name: 'Sat', earnings: 480 },
+  { name: 'Sun', earnings: 380 },
+];
+
+const mockBookingsData = [
+  { name: 'Completed', value: 45, color: '#10b981' }, // green-500
+  { name: 'Pending', value: 12, color: '#f59e0b' },   // amber-500
+  { name: 'Cancelled', value: 3, color: '#ef4444' },  // red-500
+];
 
 export default function Dashboard() {
   const { user, updateUser } = useAuth();
@@ -206,6 +223,79 @@ export default function Dashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Earnings Chart */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-forest-100 lg:col-span-2">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-gray-900">Weekly Earnings</h3>
+            <select className="bg-gray-50 border-none text-sm text-gray-600 rounded-lg focus:ring-forest-500 cursor-pointer">
+              <option>This Week</option>
+              <option>Last Week</option>
+              <option>This Month</option>
+            </select>
+          </div>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={mockEarningsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2e7d32" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#2e7d32" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  formatter={(value: number) => [`$${value}`, 'Earnings']}
+                />
+                <Area type="monotone" dataKey="earnings" stroke="#2e7d32" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Bookings Status Chart */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-forest-100">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Bookings Overview</h3>
+          <div className="h-64 relative flex flex-col justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={mockBookingsData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {mockBookingsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-4">
+              <span className="text-3xl font-bold text-gray-900">{totalBookings}</span>
+              <span className="text-xs text-gray-500">Total</span>
+            </div>
+          </div>
+          <div className="flex justify-center gap-4 mt-2">
+            {mockBookingsData.map((entry, index) => (
+              <div key={index} className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                <span className="text-xs font-medium text-gray-600">{entry.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

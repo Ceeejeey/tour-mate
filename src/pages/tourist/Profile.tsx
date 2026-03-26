@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { User, Mail, Phone, MapPin, Globe, Camera } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Globe, Camera, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Profile() {
   const { user, updateUser } = useAuth() as any;
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Mock state for form fields
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -16,9 +17,62 @@ export default function Profile() {
     bio: user?.bio || 'I love traveling and exploring new cultures.',
   });
 
+  // Store original values to track changes
+  const [originalData, setOriginalData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    nationality: user?.nationality || '',
+    bio: user?.bio || 'I love traveling and exploring new cultures.',
+  });
+
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setOriginalData({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      nationality: formData.nationality,
+      bio: formData.bio,
+    });
+  };
+
+  const getChangedFields = () => {
+    const changes: string[] = [];
+    const fieldLabels: Record<string, string> = {
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone number',
+      nationality: 'Nationality',
+      bio: 'Bio'
+    };
+
+    Object.keys(formData).forEach((key) => {
+      const fieldKey = key as keyof typeof formData;
+      if (formData[fieldKey] !== originalData[fieldKey]) {
+        changes.push(fieldLabels[fieldKey]);
+      }
+    });
+
+    return changes;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+
+    const changedFields = getChangedFields();
+
+    if (changedFields.length === 0) {
+      toast('No changes detected', {
+        icon: 'ℹ️',
+        style: { background: '#eff6ff', color: '#1e40af', border: '1px solid #93c5fd' }
+      });
+      setIsSaving(false);
+      setIsEditing(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('tourmate_token');
       const response = await fetch('http://localhost:5066/api/users/me', {
@@ -37,17 +91,31 @@ export default function Profile() {
 
       if (response.ok) {
         setIsEditing(false);
-        const updatedUser = { 
-          ...user, 
+        const updatedUser = {
+          ...user,
           ...formData
         };
         updateUser(updatedUser);
+
+        // Show specific toast for each changed field
+        changedFields.forEach((field, index) => {
+          setTimeout(() => {
+            toast.success(`${field} updated successfully!`, {
+              style: { background: '#f0fdf4', color: '#166534', border: '1px solid #86efac' }
+            });
+          }, index * 150);
+        });
       } else {
-        alert("Failed to update profile");
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to update profile', {
+          style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' }
+        });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Failed to update profile");
+      toast.error(err.message || 'Failed to update profile. Please try again.', {
+        style: { background: '#fef2f2', color: '#dc2626', border: '1px solid #f87171' }
+      });
     } finally {
       setIsSaving(false);
     }
@@ -77,7 +145,7 @@ export default function Profile() {
             </div>
             {!isEditing && (
               <button
-                onClick={() => setIsEditing(true)}
+                onClick={handleEditClick}
                 className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
               >
                 Edit Profile
@@ -168,15 +236,18 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  disabled={isSaving}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-700"
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-forest-600 text-white rounded-lg text-sm font-medium hover:bg-forest-700 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Save Changes
+                  {isSaving && <Loader2 className="animate-spin h-4 w-4" />}
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             )}
