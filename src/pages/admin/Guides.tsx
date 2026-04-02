@@ -1,23 +1,67 @@
-import React, { useState } from 'react';
-import { MOCK_GUIDES } from '../../data/mockData';
-import { Search, MapPin, Star, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, MapPin, Star, CheckCircle, XCircle, X } from 'lucide-react';
 import { Guide } from '../../types';
+import toast from 'react-hot-toast';
 
 export default function Guides() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [guides, setGuides] = useState<Guide[]>(MOCK_GUIDES);
+  const [guides, setGuides] = useState<Guide[]>([]);
+  const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
+
+  useEffect(() => {
+    fetchGuides();
+  }, []);
+
+  const fetchGuides = async () => {
+    try {
+      const token = localStorage.getItem('tourmate_token');
+      const response = await fetch('http://localhost:5066/api/users/guides', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setGuides(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch guides', error);
+    }
+  };
 
   const filteredGuides = guides.filter(guide =>
     guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guide.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const toggleVerification = (id: string) => {
-    setGuides(guides.map(g => g.id === id ? { ...g, verified: !g.verified } : g));
+  const toggleVerification = async (id: string) => {
+    try {
+      const token = localStorage.getItem('tourmate_token');
+      const response = await fetch(`http://localhost:5066/api/users/guides/${id}/verify`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setGuides(guides.map(g => g.id === id ? { ...g, verified: data.verified } : g));
+        if (selectedGuide && selectedGuide.id === id) {
+          setSelectedGuide({ ...selectedGuide, verified: data.verified });
+        }
+        toast.success(data.message);
+      } else {
+        toast.error('Failed to update verification status');
+      }
+    } catch (error) {
+      toast.error('An error occurred');
+    }
   };
 
   const toggleAvailability = (id: string) => {
-    setGuides(guides.map(g => g.id === id ? { ...g, isAvailable: !g.isAvailable } : g));
+    // Only guides can update availability from backend, but kept for UI visual if needed
+    // setGuides(guides.map(g => g.id === id ? { ...g, isAvailable: !g.isAvailable } : g));
   };
 
   return (
@@ -89,16 +133,26 @@ export default function Guides() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button onClick={() => toggleVerification(guide.id)}>
+                    <div className="flex items-center">
                       {guide.verified ? (
                         <CheckCircle size={20} className="text-blue-500" />
                       ) : (
                         <XCircle size={20} className="text-gray-300" />
                       )}
-                    </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-forest-600 hover:underline font-medium">View Details</button>
+                    <button
+                      onClick={() => setSelectedGuide(guide)}
+                      aria-label={guide.verified ? 'View guide details' : 'Open guide approval modal'}
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition ${
+                          guide.verified
+                            ? 'bg-white border border-forest-600 text-forest-600 hover:bg-forest-50'
+                            : 'bg-forest-600 text-white hover:bg-forest-700'
+                        }`}
+                    >
+                      {guide.verified ? 'View Details' : 'Approve Guide'}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -106,6 +160,109 @@ export default function Guides() {
           </table>
         </div>
       </div>
+
+      {/* Guide Details Modal */}
+      {selectedGuide && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold text-gray-900">Guide Verification Panel</h2>
+              <button 
+                onClick={() => setSelectedGuide(null)}
+                className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row gap-6 mb-8">
+                <img 
+                  src={selectedGuide.avatar || 'https://via.placeholder.com/150'} 
+                  alt={selectedGuide.name}
+                  className="w-32 h-32 rounded-xl object-cover bg-gray-100"
+                />
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">{selectedGuide.name}</h3>
+                  <div className="text-gray-500 mb-4">{selectedGuide.email}</div>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="px-3 py-1 bg-forest-50 text-forest-700 rounded-full text-sm font-medium">
+                      {selectedGuide.serviceArea}
+                    </span>
+                    {selectedGuide.verified ? (
+                      <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium flex items-center gap-1">
+                        <CheckCircle size={14} /> Verified
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-sm font-medium flex items-center gap-1">
+                        Pending Approval
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wider">Contact Info</h4>
+                  <div className="space-y-2">
+                    <p className="text-gray-900"><span className="font-medium">Phone:</span> {selectedGuide.phone || 'N/A'}</p>
+                    <p className="text-gray-900"><span className="font-medium">Email:</span> {selectedGuide.email}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wider">Experience & Skills</h4>
+                  <div className="space-y-2">
+                    <p className="text-gray-900"><span className="font-medium">Experience:</span> {selectedGuide.experience || 'N/A'}</p>
+                    <div>
+                      <span className="font-medium block text-gray-900 mb-1">Languages:</span> 
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(selectedGuide.languages) && selectedGuide.languages.length > 0 
+                          ? selectedGuide.languages.map(lang => (
+                              <span key={lang} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-sm">{lang}</span>
+                            ))
+                          : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <h4 className="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wider">Bio</h4>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg leading-relaxed">
+                    {selectedGuide.bio || 'No biography provided.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3 sticky bottom-0 bg-white z-10">
+              <button 
+                onClick={() => setSelectedGuide(null)}
+                className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+              <button 
+                onClick={() => toggleVerification(selectedGuide.id)}
+                className={`px-6 py-2 font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                  selectedGuide.verified 
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
+                    : 'bg-forest-600 text-white hover:bg-forest-700'
+                }`}
+              >
+                {selectedGuide.verified ? (
+                  <>Revoke Verification</>
+                ) : (
+                  <><CheckCircle size={18} /> Approve Guide</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

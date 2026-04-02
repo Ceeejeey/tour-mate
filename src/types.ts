@@ -23,6 +23,7 @@ export interface Guide extends User {
   verified: boolean;
   latitude?: number;
   longitude?: number;
+  phone?: string;
 }
 
 export interface Booking {

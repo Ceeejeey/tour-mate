@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, Lock, Phone, MapPin, Globe, Upload, Loader2 } from 'lucide-react';
@@ -8,8 +8,32 @@ import toast from 'react-hot-toast';
 export default function Register() {
   const [role, setRole] = useState<Role>('tourist');
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { register } = useAuth() as any;
   const navigate = useNavigate();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files.length ? e.target.files[0] : null;
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+    } else {
+      setSelectedFile(null);
+      setPreview(null);
+    }
+  };
+
+  const removeFile = () => {
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+    setSelectedFile(null);
+    setPreview(null);
+  };
 
   const validateForm = (formData: FormData): boolean => {
     const name = formData.get('name') as string;
@@ -114,7 +138,11 @@ export default function Register() {
       }
 
       await register(data);
-      toast.success('Account created successfully!', { position: 'top-right' });
+      if (role === 'guide') {
+        toast.success('Registration successful. Please wait for the admin approval.', { position: 'top-right', duration: 6000 });
+      } else {
+        toast.success('Account created successfully!', { position: 'top-right' });
+      }
       navigate('/login');
     } catch (err: any) {
       if (err.message && err.message.includes('Validation')) {
@@ -126,6 +154,12 @@ export default function Register() {
       setIsLoading(false);
     }
   };
+
+    useEffect(() => {
+      return () => {
+        if (preview) URL.revokeObjectURL(preview);
+      };
+    }, [preview]);
 
   return (
     <div className="min-h-[90vh] flex items-center justify-center px-4 py-12">
@@ -284,17 +318,40 @@ export default function Register() {
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Profile Photo</label>
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-forest-600 transition-colors cursor-pointer bg-gray-50">
-                    <div className="space-y-1 text-center">
-                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                      <div className="flex text-sm text-gray-600">
-                        <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-forest-600 hover:text-forest-700 focus-within:outline-none">
-                          <span>Upload a file</span>
-                          <input id="file-upload" name="file-upload" type="file" className="sr-only" />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
+                  <div className="mt-1 flex justify-center">
+                    <div className="w-full">
+                      <div className="flex items-center space-x-4 p-4 border-2 border-gray-300 border-dashed rounded-lg hover:border-forest-600 transition-colors bg-gray-50">
+                        {preview ? (
+                          <div className="relative flex-shrink-0">
+                            <img src={preview} alt="Selected profile" className="w-24 h-24 rounded-full object-cover border-2 border-white shadow-sm" />
+                          </div>
+                        ) : (
+                          <div className="flex-shrink-0">
+                            <div className="w-24 h-24 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                              <Upload className="h-8 w-8 text-gray-400" />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{selectedFile ? selectedFile.name : 'No file selected'}</p>
+                          <p className="text-xs text-gray-500">{selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'PNG, JPG, GIF up to 10MB'}</p>
+
+                          <div className="mt-3 flex space-x-2">
+                            <label htmlFor="file-upload" className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-forest-600 bg-white hover:bg-gray-100 cursor-pointer">
+                              Change
+                              <input id="file-upload" name="file-upload" type="file" accept="image/*" className="sr-only" ref={fileInputRef} onChange={handleFileChange} />
+                            </label>
+
+                            {preview && (
+                              <button type="button" onClick={removeFile} className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md bg-white text-gray-700 hover:bg-gray-50">
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                      <p className="mt-2 text-xs text-gray-500 text-center">You can change or remove the selected image before submitting.</p>
                     </div>
                   </div>
                 </div>
