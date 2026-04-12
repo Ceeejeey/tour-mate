@@ -34,6 +34,19 @@ export interface Booking {
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   totalPrice: number;
   notes?: string;
+  guide?: {
+    id: string;
+    name: string;
+    avatar?: string;
+    serviceArea?: string;
+    phone?: string;
+  };
+  tourist?: {
+    id: string;
+    name: string;
+    avatar?: string;
+    phone?: string;
+  };
 }
 
 export interface Message {

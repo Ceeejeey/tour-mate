@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { MOCK_GUIDES, MOCK_MESSAGES } from '../../data/mockData';
-import { Zap, CheckCircle, AlertCircle, MessageCircle, Send } from 'lucide-react';
+import { MOCK_MESSAGES } from '../../data/mockData';
+import { Guide } from '../../types';
+import { Zap, CheckCircle, AlertCircle, MessageCircle, Send, Loader2 } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
 import { format } from 'date-fns';
 
@@ -9,10 +10,41 @@ export default function BookingNew() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const guideId = searchParams.get('guideId');
-  const guide = MOCK_GUIDES.find(g => g.id === guideId);
+  
+  const [guide, setGuide] = useState<Guide | null>(null);
+  const [isLoadingGuide, setIsLoadingGuide] = useState(true);
 
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchGuideDetails = async () => {
+      setIsLoadingGuide(true);
+      try {
+        const token = localStorage.getItem('tourmate_token');
+        const response = await fetch('http://localhost:5066/api/users/guides', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const guides: Guide[] = await response.json();
+          const foundGuide = guides.find(g => g.id.toString() === guideId);
+          setGuide(foundGuide || null);
+        }
+      } catch (err) {
+        console.error('Error fetching guide details:', err);
+      } finally {
+        setIsLoadingGuide(false);
+      }
+    };
+    
+    if (guideId) {
+      fetchGuideDetails();
+    } else {
+      setIsLoadingGuide(false);
+    }
+  }, [guideId]);
 
   // Chat state
   const [messages, setMessages] = useState(MOCK_MESSAGES);
@@ -49,6 +81,15 @@ export default function BookingNew() {
     setMessageInput('');
   };
 
+  if (isLoadingGuide) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <Loader2 className="h-10 w-10 text-forest-600 animate-spin mb-4" />
+        <h2 className="text-xl font-medium text-gray-700">Loading Booking Details...</h2>
+      </div>
+    );
+  }
+
   if (!guide) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
@@ -65,19 +106,41 @@ export default function BookingNew() {
     );
   }
 
-  const sessionPrice = guide.pricePerSession;
+  const sessionPrice = guide.pricePerSession || 0;
   const serviceFee = sessionPrice * 0.05;
   const total = sessionPrice + serviceFee;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!guide) return;
+    
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem('tourmate_token');
+      const response = await fetch('http://localhost:5066/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          GuideId: guide.id,
+          TotalPrice: total,
+          Notes: notes
+        })
+      });
+
+      if (response.ok) {
+        navigate('/tourist/bookings');
+      } else {
+        console.error('Failed to create booking');
+      }
+    } catch (err) {
+      console.error('Error submitting booking:', err);
+    } finally {
       setIsSubmitting(false);
-      navigate('/tourist/bookings');
-    }, 1500);
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
@@ -9,6 +9,7 @@ import {
   Leaf,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import toast from 'react-hot-toast';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -32,6 +33,60 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
+  const prevBookingsCountRef = useRef(0);
+
+  useEffect(() => {
+    if (!user || user.role !== 'guide') return;
+
+    let isMounted = true;
+    
+    const checkForNewBookings = async () => {
+      try {
+        const token = localStorage.getItem('tourmate_token');
+        if (!token) return;
+
+        const response = await fetch('http://localhost:5066/api/bookings/my-bookings', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const bookings = await response.json();
+          const pending = bookings.filter((b: any) => b.status === 'pending');
+          const currentCount = pending.length;
+          
+          if (isMounted) {
+            setPendingBookingsCount(currentCount);
+
+            if (currentCount > prevBookingsCountRef.current && prevBookingsCountRef.current !== 0) {
+              const newBookingsCount = currentCount - prevBookingsCountRef.current;
+              toast.success(`You have ${newBookingsCount} new booking request(s)!`, {
+                icon: '🔔',
+                duration: 5000,
+                position: 'top-right'
+              });
+            }
+            
+            prevBookingsCountRef.current = currentCount;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check bookings:', error);
+      }
+    };
+
+    checkForNewBookings();
+    
+    // Poll every 15 seconds
+    const intervalId = setInterval(checkForNewBookings, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -70,9 +125,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {/* Right Actions */}
             <div className="flex items-center gap-2">
               {/* Notification Bell */}
-              <button className="relative p-2 text-forest-500 hover:text-forest-700 hover:bg-forest-50 rounded-lg transition-colors">
+              <button 
+                onClick={() => user?.role === 'guide' ? navigate('/guide/bookings') : navigate('/tourist/bookings')}
+                className="relative p-2 text-forest-500 hover:text-forest-700 hover:bg-forest-50 rounded-lg transition-colors"
+                title="Notifications"
+              >
                 <Bell size={20} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-earth-400 rounded-full" />
+                {pendingBookingsCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-earth-500 text-[9px] font-bold text-white">
+                    {pendingBookingsCount}
+                  </span>
+                )}
               </button>
 
               {/* User Quick Info */}

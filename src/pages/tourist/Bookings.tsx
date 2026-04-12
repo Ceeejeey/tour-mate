@@ -1,15 +1,75 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MOCK_BOOKINGS, MOCK_GUIDES } from '../../data/mockData';
+import { Booking } from '../../types';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
-import { Calendar, MapPin, MessageCircle, CreditCard } from 'lucide-react';
+import { Calendar, MapPin, MessageCircle, CreditCard, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Bookings() {
-  // Filter bookings for the current mock user (t1)
-  const myBookings = MOCK_BOOKINGS.filter(b => b.touristId === 't1');
+  const [myBookings, setMyBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const getGuide = (id: string) => MOCK_GUIDES.find(g => g.id === id);
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const fetchBookings = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('tourmate_token');
+      const response = await fetch('http://localhost:5066/api/bookings', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMyBookings(data);
+      } else {
+        toast.error('Failed to load bookings');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error fetching bookings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelBooking = async (id: string) => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    
+    try {
+      const token = localStorage.getItem('tourmate_token');
+      const response = await fetch(`http://localhost:5066/api/bookings/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ Status: 'cancelled' })
+      });
+      
+      if (response.ok) {
+        toast.success('Booking cancelled successfully');
+        fetchBookings();
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to cancel booking');
+      }
+    } catch (err) {
+      toast.error('Error cancelling booking');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-forest-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8">
@@ -26,7 +86,7 @@ export default function Bookings() {
       <div className="space-y-4">
         {myBookings.length > 0 ? (
           myBookings.map((booking) => {
-            const guide = getGuide(booking.guideId);
+            const guide = booking.guide;
             if (!guide) return null;
 
             return (
@@ -35,7 +95,7 @@ export default function Bookings() {
                   {/* Guide Info */}
                   <div className="flex items-start gap-4 md:w-1/4">
                     <img
-                      src={guide.avatar}
+                      src={guide.avatar || "https://ui-avatars.com/api/?name=" + guide.name}
                       alt={guide.name}
                       className="w-16 h-16 rounded-full object-cover border border-gray-200"
                     />
@@ -43,7 +103,7 @@ export default function Bookings() {
                       <h3 className="font-bold text-gray-900">{guide.name}</h3>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
                         <MapPin size={14} className="mr-1" />
-                        {guide.serviceArea}
+                        {guide.serviceArea || "No Area Provided"}
                       </div>
                     </div>
                   </div>
@@ -78,13 +138,14 @@ export default function Bookings() {
                         Pay Now
                       </Link>
                     )}
-                    <Link
-                      to="/tourist/chat"
-                      className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
-                    >
-                      <MessageCircle size={16} />
-                      Message
-                    </Link>
+                    {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                      <button
+                        onClick={() => handleCancelBooking(booking.id)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

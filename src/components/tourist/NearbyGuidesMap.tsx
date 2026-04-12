@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
-import { MOCK_GUIDES } from '../../data/mockData';
 import { Guide } from '../../types';
 import { Link } from 'react-router-dom';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
@@ -46,50 +45,96 @@ export default function NearbyGuidesMap() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nearbyGuides, setNearbyGuides] = useState<Guide[]>([]);
+  const [allGuides, setAllGuides] = useState<Guide[]>([]);
 
   // Default center (Colombo, Sri Lanka) if user location not found
   const defaultCenter = { lat: 6.9271, lng: 79.8612 };
 
-  const getUserLocation = () => {
+  const fetchGuides = async () => {
+    console.log('Fetching guides from API...');
+    try {
+      const token = localStorage.getItem('tourmate_token');
+      const response = await fetch('http://localhost:5066/api/users/guides', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      console.log('API Response status:', response.status);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Raw guides data from API:', data);
+        setAllGuides(data);
+        return data;
+      } else {
+        console.error('Failed to fetch guides, response not OK');
+      }
+    } catch (err) {
+      console.error('Error fetching guides:', err);
+    }
+    return [];
+  };
+
+  const getUserLocation = async () => {
+    console.log('Getting user location...');
     setIsLoading(true);
     setError(null);
 
+    const guides = await fetchGuides();
+    console.log(`Fetched ${guides.length} total guides to map.`);
+
     if (!navigator.geolocation) {
+      console.log('Geolocation not supported.');
       setError('Geolocation is not supported by your browser');
       setIsLoading(false);
+      const filtered = guides.filter((g: Guide) => g.latitude != null && g.longitude != null);
+      console.log('Guides with location (no user location):', filtered);
+      setNearbyGuides(filtered);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+        console.log(`Successfully got user location: lat=${latitude}, lng=${longitude}`);
         setUserLocation({ lat: latitude, lng: longitude });
-        findNearbyGuides(latitude, longitude);
+        findNearbyGuides(latitude, longitude, guides);
         setIsLoading(false);
       },
-      () => {
+      (geoError) => {
+        console.warn('Error getting geolocation:', geoError.message);
         setError('Unable to retrieve your location. Showing default view.');
         setIsLoading(false);
         // Still show guides even if user location fails
-        setNearbyGuides(MOCK_GUIDES.filter(g => g.latitude && g.longitude));
+        const filtered = guides.filter((g: Guide) => g.latitude != null && g.longitude != null);
+        console.log('Guides with location (fallback):', filtered);
+        setNearbyGuides(filtered);
       }
     );
   };
 
-  const findNearbyGuides = (lat: number, lng: number) => {
+  const findNearbyGuides = (lat: number, lng: number, guides: Guide[]) => {
+    console.log('Filtering nearby guides relative to user coords...');
     // Simple distance calculation (Haversine not strictly needed for mock, but good practice)
     // For now, just showing all guides with coordinates as "nearby" is sufficient for the demo
     // In a real app, we'd filter by radius (e.g., 50km)
     
-    const guidesWithLocation = MOCK_GUIDES.filter(g => g.latitude && g.longitude);
+    // Ensure we parse latitude and longitude as numbers, just in case they're strings from API
+    const guidesWithLocation = guides.filter(g => g.latitude != null && g.longitude != null).map(g => ({
+      ...g,
+      latitude: Number(g.latitude),
+      longitude: Number(g.longitude)
+    }));
+    
+    console.log('Guides with valid lat/lng before sorting:', guidesWithLocation);
     
     // Sort by distance (simple Euclidean approximation for small distances)
     const sortedGuides = guidesWithLocation.sort((a, b) => {
-      const distA = Math.sqrt(Math.pow((a.latitude! - lat), 2) + Math.pow((a.longitude! - lng), 2));
-      const distB = Math.sqrt(Math.pow((b.latitude! - lat), 2) + Math.pow((b.longitude! - lng), 2));
+      const distA = Math.sqrt(Math.pow((a.latitude - lat), 2) + Math.pow((a.longitude - lng), 2));
+      const distB = Math.sqrt(Math.pow((b.latitude - lat), 2) + Math.pow((b.longitude - lng), 2));
       return distA - distB;
     });
 
+    console.log('Final sorted nearby guides:', sortedGuides);
     setNearbyGuides(sortedGuides);
   };
 
@@ -173,10 +218,10 @@ export default function NearbyGuidesMap() {
                   </span>
                 </div>
                 <Link
-                  to={`/tourist/guide/${guide.id}`}
-                  className="block w-full bg-forest-600 text-white text-center py-1.5 rounded text-xs font-medium hover:bg-forest-700"
+                  to={`/tourist/booking/new?guideId=${guide.id}`}
+                  className="block w-full bg-forest-600 text-white text-center py-1.5 rounded text-xs font-medium hover:bg-forest-700 transition"
                 >
-                  View Profile
+                  Book Now
                 </Link>
               </div>
             </Popup>
