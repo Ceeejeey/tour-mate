@@ -3,7 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import { Guide } from '../../types';
 import { Link } from 'react-router-dom';
-import { MapPin, Navigation, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, Loader2, Share2, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default Leaflet icon not loading in React
@@ -46,6 +47,8 @@ export default function NearbyGuidesMap() {
   const [error, setError] = useState<string | null>(null);
   const [nearbyGuides, setNearbyGuides] = useState<Guide[]>([]);
   const [allGuides, setAllGuides] = useState<Guide[]>([]);
+  const [isSharing, setIsSharing] = useState(false);
+  const [hasShared, setHasShared] = useState(false);
 
   // Default center (Colombo, Sri Lanka) if user location not found
   const defaultCenter = { lat: 6.9271, lng: 79.8612 };
@@ -138,6 +141,51 @@ export default function NearbyGuidesMap() {
     setNearbyGuides(sortedGuides);
   };
 
+  const handleShareLocation = async () => {
+    setIsSharing(true);
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      setIsSharing(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+
+        try {
+          const token = localStorage.getItem('tourmate_token');
+          const response = await fetch('http://localhost:5066/api/users/me/location', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ latitude, longitude })
+          });
+
+          if (response.ok) {
+            setHasShared(true);
+            toast.success('Location shared! Guides can now find you.');
+          } else {
+            toast.error('Failed to share location securely.');
+          }
+        } catch (err) {
+          console.error('Error sharing location:', err);
+          toast.error('Network error while sharing location.');
+        } finally {
+          setIsSharing(false);
+        }
+      },
+      (error) => {
+        console.warn('Error getting geolocation:', error.message);
+        toast.error('Unable to retrieve your location for sharing.');
+        setIsSharing(false);
+      }
+    );
+  };
+
   useEffect(() => {
     // Initial load - try to get location or just show all
     getUserLocation();
@@ -154,14 +202,35 @@ export default function NearbyGuidesMap() {
         </div>
       )}
 
-      {!isLoading && !userLocation && (
-        <div className="absolute top-4 right-4 z-[1000]">
+      {!isLoading && (
+        <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+          {!userLocation && (
+            <button
+              onClick={getUserLocation}
+              className="bg-white text-gray-700 px-4 py-2 rounded-lg shadow-md font-medium hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors border border-gray-100"
+            >
+              <Navigation size={16} />
+              Find My Location
+            </button>
+          )}
+          
           <button
-            onClick={getUserLocation}
-            className="bg-white text-gray-700 px-4 py-2 rounded-lg shadow-md font-medium hover:bg-gray-50 flex items-center gap-2"
+            onClick={hasShared ? undefined : handleShareLocation}
+            disabled={isSharing || hasShared}
+            className={`px-4 py-2 rounded-lg shadow-md font-medium flex items-center justify-center gap-2 transition-all border ${
+              hasShared 
+                ? 'bg-green-50 text-green-700 border-green-200 cursor-default' 
+                : 'bg-forest-600 text-white border-forest-600 hover:bg-forest-700 hover:shadow-lg'
+            }`}
           >
-            <Navigation size={16} />
-            Find My Location
+            {isSharing ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : hasShared ? (
+              <Check size={16} />
+            ) : (
+              <Share2 size={16} />
+            )}
+            {isSharing ? 'Sharing...' : hasShared ? 'Location Shared' : 'Share Location with Guides'}
           </button>
         </div>
       )}

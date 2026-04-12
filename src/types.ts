@@ -40,12 +40,16 @@ export interface Booking {
     avatar?: string;
     serviceArea?: string;
     phone?: string;
+    latitude?: number;
+    longitude?: number;
   };
   tourist?: {
     id: string;
     name: string;
     avatar?: string;
     phone?: string;
+    latitude?: number;
+    longitude?: number;
   };
 }
 

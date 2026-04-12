@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Booking } from '../../types';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
-import { Check, X, Calendar, DollarSign, MessageCircle, Loader2 } from 'lucide-react';
+import { Check, X, Calendar, DollarSign, MessageCircle, Loader2, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import TouristMapModal from '../../components/guide/TouristMapModal';
 
 export default function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTouristForMap, setSelectedTouristForMap] = useState<any | null>(null);
 
   useEffect(() => {
     fetchBookings();
@@ -168,6 +170,18 @@ export default function Bookings() {
                       <MessageCircle size={16} />
                       Message
                     </Link>
+                    <button
+                      onClick={() => setSelectedTouristForMap({
+                        name: tourist.name,
+                        phone: tourist.phone,
+                        latitude: tourist.latitude,
+                        longitude: tourist.longitude
+                      })}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 text-sm font-medium rounded-lg hover:bg-indigo-100 transition-colors mt-1 lg:mt-2"
+                    >
+                      <MapPin size={16} />
+                      View Map
+                    </button>
                   </div>
                 </div>
               </div>
@@ -179,6 +193,14 @@ export default function Bookings() {
           </div>
         )}
       </div>
+
+      {selectedTouristForMap && (
+        <TouristMapModal
+          isOpen={!!selectedTouristForMap}
+          onClose={() => setSelectedTouristForMap(null)}
+          tourist={selectedTouristForMap}
+        />
+      )}
     </div>
   );
 }
