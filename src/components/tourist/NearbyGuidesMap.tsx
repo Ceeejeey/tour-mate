@@ -218,7 +218,7 @@ export default function NearbyGuidesMap() {
                   </span>
                 </div>
                 <Link
-                  to={`/tourist/booking/new?guideId=${guide.id}`}
+                  to={`/tourist/guide/${guide.id}`}
                   className="block w-full bg-forest-600 text-white text-center py-1.5 rounded text-xs font-medium hover:bg-forest-700 transition"
                 >
                   Book Now

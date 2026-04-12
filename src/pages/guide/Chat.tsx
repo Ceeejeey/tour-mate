@@ -1,57 +1,147 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MOCK_MESSAGES, MOCK_TOURISTS } from '../../data/mockData';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Send, Search, MoreVertical, Phone, Video } from 'lucide-react';
 import { format } from 'date-fns';
+import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
+import toast from 'react-hot-toast';
 
 export default function Chat() {
   const { user } = useAuth();
-  const [activeChatId, setActiveChatId] = useState<string | null>('t1');
+  const [searchParams] = useSearchParams();
+  const preSelectedUserId = searchParams.get('userId');
+  
+  const [activeChatId, setActiveChatId] = useState<number | null>(preSelectedUserId ? parseInt(preSelectedUserId) : null);
   const [messageInput, setMessageInput] = useState('');
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
+  const [connection, setConnection] = useState<HubConnection | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // For guide, conversations are with tourists
-  const conversations = Array.from(new Set(messages.map(m => m.senderId === 'g1' ? m.receiverId : m.senderId)))
-    .map(id => MOCK_TOURISTS.find(t => t.id === id))
-    .filter(Boolean);
-
-  const activeConversation = MOCK_TOURISTS.find(t => t.id === activeChatId);
-  
-  const currentMessages = messages.filter(
-    m => (m.senderId === 'g1' && m.receiverId === activeChatId) || 
-         (m.senderId === activeChatId && m.receiverId === 'g1')
-  ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const activeConversation = conversations.find(c => c.id === activeChatId);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [currentMessages]);
+    const fetchConversations = async () => {
+      try {
+        const token = localStorage.getItem('tourmate_token');
+        const res = await fetch('http://localhost:5066/api/messages/conversations', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setConversations(data);
+          if (data.length > 0 && !activeChatId && !preSelectedUserId) {
+            setActiveChatId(data[0].id);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchConversations();
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!messageInput.trim() || !activeChatId) return;
+    const token = localStorage.getItem('tourmate_token');
+    if (token) {
+      const newConnection = new HubConnectionBuilder()
+        .withUrl('http://localhost:5066/chathub', {
+          accessTokenFactory: () => token
+        })
+        .configureLogging(LogLevel.Information)
+        .withAutomaticReconnect()
+        .build();
 
-    const newMessage = {
-      id: `m${Date.now()}`,
-      senderId: 'g1',
-      receiverId: activeChatId,
-      content: messageInput,
-      timestamp: new Date().toISOString(),
-      read: false
+      setConnection(newConnection);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (connection) {
+      connection.start()
+        .then(() => {
+          connection.invoke('GetOnlineUsers').then((users: number[]) => {
+            setOnlineUsers(users);
+          });
+
+          connection.on('UserOnline', (userId: number) => {
+            setOnlineUsers(prev => [...new Set([...prev, userId])]);
+          });
+
+          connection.on('UserOffline', (userId: number) => {
+            setOnlineUsers(prev => prev.filter(id => id !== userId));
+          });
+          
+          connection.on('ReceiveMessage', (message) => {
+            setMessages(prev => {
+              if (!prev.find(m => m.id === message.id)) {
+                return [...prev, message];
+              }
+              return prev;
+            });
+            scrollToBottom();
+          });
+        })
+        .catch(e => console.log('Connection failed: ', e));
+
+      return () => {
+        connection.off('UserOnline');
+        connection.off('UserOffline');
+        connection.off('ReceiveMessage');
+        connection.stop();
+      };
+    }
+  }, [connection]);
+
+  useEffect(() => {
+    if (!activeChatId) return;
+
+    const fetchMessages = async () => {
+      try {
+        const token = localStorage.getItem('tourmate_token');
+        const res = await fetch(`http://localhost:5066/api/messages/${activeChatId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(data);
+          scrollToBottom();
+        }
+      } catch (err) {
+        console.error(err);
+      }
     };
 
-    setMessages([...messages, newMessage]);
-    setMessageInput('');
+    fetchMessages();
+  }, [activeChatId]);
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageInput.trim() || !activeChatId || !connection) return;
+
+    try {
+      await connection.invoke('SendMessage', activeChatId, messageInput);
+      setMessageInput('');
+      scrollToBottom();
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to send message');
+    }
+  };
+
+  const currentMessages = messages.filter(
+    m => (Number(m.senderId) === Number(user?.id) && Number(m.receiverId) === Number(activeChatId)) || 
+         (Number(m.senderId) === Number(activeChatId) && Number(m.receiverId) === Number(user?.id))
+  ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   return (
     <div className="p-6 lg:p-8 h-[calc(100vh-64px)]">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden h-full flex">
-        {/* Sidebar */}
         <div className="w-full md:w-80 border-r border-gray-100 flex flex-col h-full">
           <div className="p-4 border-b border-gray-100">
             <div className="relative">
@@ -65,50 +155,65 @@ export default function Chat() {
           </div>
           
           <div className="flex-1 overflow-y-auto">
-            {conversations.map(tourist => (
+            {conversations.map(c => (
               <button
-                key={tourist?.id}
-                onClick={() => setActiveChatId(tourist?.id || null)}
+                key={c.id}
+                onClick={() => setActiveChatId(c.id)}
                 className={`w-full p-4 flex items-center gap-3 hover:bg-gray-50 transition-colors ${
-                  activeChatId === tourist?.id ? 'bg-forest-600/5 border-r-4 border-forest-600' : ''
+                  activeChatId === c.id ? 'bg-forest-600/5 border-r-4 border-forest-600' : ''
                 }`}
               >
                 <div className="relative">
                   <img
-                    src={tourist?.avatar}
-                    alt={tourist?.name}
-                    className="w-12 h-12 rounded-full object-cover"
+                    src={c.avatar || `https://ui-avatars.com/api/?name=${c.name}&background=CCC&color=fff`}
+                    alt={c.name}
+                    className="w-12 h-12 rounded-full object-cover border border-gray-200"
                   />
+                  {onlineUsers.includes(c.id) && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                  )}
                 </div>
                 <div className="flex-1 text-left min-w-0">
                   <div className="flex justify-between items-baseline mb-1">
-                    <h3 className="font-semibold text-gray-900 truncate">{tourist?.name}</h3>
-                    <span className="text-xs text-gray-400">10:30 AM</span>
+                    <h3 className="font-semibold text-gray-900 truncate">{c.name}</h3>
                   </div>
-                  <p className="text-sm text-gray-500 truncate">
-                    {messages.findLast(m => m.senderId === tourist?.id || m.receiverId === tourist?.id)?.content || 'Start a conversation'}
+                  <p className="text-sm text-gray-500 truncate capitalize">
+                    {c.role}
                   </p>
                 </div>
               </button>
             ))}
+            {conversations.length === 0 && (
+              <div className="p-4 text-sm text-gray-400 text-center mt-10">
+                You have no active conversations.
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Chat Window */}
         <div className="flex-1 flex flex-col h-full bg-gray-50/50">
           {activeChatId && activeConversation ? (
             <>
-              {/* Header */}
               <div className="p-4 bg-white border-b border-gray-100 flex justify-between items-center shadow-sm z-10">
                 <div className="flex items-center gap-3">
                   <img
-                    src={activeConversation.avatar}
+                    src={activeConversation.avatar || `https://ui-avatars.com/api/?name=${activeConversation.name}&background=CCC&color=fff`}
                     alt={activeConversation.name}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
                   />
                   <div>
                     <h3 className="font-bold text-gray-900">{activeConversation.name}</h3>
-                    <span className="text-xs text-gray-500">{activeConversation.nationality}</span>
+                    {onlineUsers.includes(activeConversation.id) ? (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-green-600 rounded-full"></span>
+                        Online
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                        Offline
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -124,10 +229,9 @@ export default function Chat() {
                 </div>
               </div>
 
-              {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {currentMessages.map((msg) => {
-                  const isMe = msg.senderId === 'g1';
+                  const isMe = Number(msg.senderId) === Number(user?.id);
                   return (
                     <div
                       key={msg.id}
@@ -151,7 +255,6 @@ export default function Chat() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
               <div className="p-4 bg-white border-t border-gray-100">
                 <form onSubmit={handleSendMessage} className="flex gap-2">
                   <input
@@ -173,7 +276,7 @@ export default function Chat() {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400">
-              Select a conversation to start chatting
+              Select a conversation to start chatting 
             </div>
           )}
         </div>

@@ -5,10 +5,12 @@ import StatusBadge from '../../components/shared/StatusBadge';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { Calendar, MapPin, MessageCircle, CreditCard, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function Bookings() {
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBookings();
@@ -100,7 +102,9 @@ export default function Bookings() {
                       className="w-16 h-16 rounded-full object-cover border border-gray-200"
                     />
                     <div>
+                    <Link to={`/tourist/guide/${guide.id}`} className="hover:underline">
                       <h3 className="font-bold text-gray-900">{guide.name}</h3>
+                    </Link>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
                         <MapPin size={14} className="mr-1" />
                         {guide.serviceArea || "No Area Provided"}

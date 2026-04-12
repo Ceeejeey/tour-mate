@@ -55,7 +55,7 @@ export default function GuideCard({ guide }: GuideCardProps) {
             View Profile
           </Link>
           <Link
-            to={`/tourist/booking/new?guideId=${guide.id}`}
+            to={`/tourist/guide/${guide.id}#book`}
             className="flex-1 bg-forest-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-forest-700 transition-colors text-center shadow-sm"
           >
             Book Now

@@ -16,7 +16,6 @@ import Register from './pages/auth/Register';
 import TouristHome from './pages/tourist/Home';
 import TouristSearch from './pages/tourist/Search';
 import GuideProfile from './pages/tourist/GuideProfile';
-import BookingNew from './pages/tourist/Booking';
 import TouristBookings from './pages/tourist/Bookings';
 import TouristChat from './pages/tourist/Chat';
 import TouristPayment from './pages/tourist/Payment';
@@ -99,11 +98,6 @@ function AppRoutes() {
       <Route path="/tourist/guide/:id" element={<PublicLayout><GuideProfile /></PublicLayout>} />
       
       {/* Tourist Dashboard Routes - app layout with sidebar */}
-      <Route path="/tourist/booking/new" element={
-        <DashboardRoute allowedRoles={['tourist']}>
-          <BookingNew />
-        </DashboardRoute>
-      } />
       <Route path="/tourist/bookings" element={
         <DashboardRoute allowedRoles={['tourist']}>
           <TouristBookings />
