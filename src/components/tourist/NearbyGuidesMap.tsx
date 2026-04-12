@@ -192,7 +192,7 @@ export default function NearbyGuidesMap() {
   }, []);
 
   return (
-    <div className="h-[600px] w-full relative rounded-xl overflow-hidden shadow-sm border border-gray-100">
+    <div className="h-[400px] w-full relative rounded-xl overflow-hidden shadow-sm border border-gray-100">
       {isLoading && (
         <div className="absolute inset-0 bg-white/80 z-[1000] flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">

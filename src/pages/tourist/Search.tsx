@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MOCK_GUIDES } from '../../data/mockData';
+import { Guide } from '../../types';
 import GuideCard from '../../components/shared/GuideCard';
-import { Filter, X } from 'lucide-react';
+import NearbyGuidesMap from '../../components/tourist/NearbyGuidesMap';
+import { Filter, X, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Search() {
   const [searchParams] = useSearchParams();
@@ -14,16 +16,47 @@ export default function Search() {
   const [minRating, setMinRating] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Extract unique languages
-  const allLanguages = Array.from(new Set(MOCK_GUIDES.flatMap(g => g.languages)));
+  const [allGuides, setAllGuides] = useState<Guide[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredGuides = MOCK_GUIDES.filter(guide => {
+  useEffect(() => {
+    const fetchGuides = async () => {
+      try {
+        const token = localStorage.getItem('tourmate_token');
+        const response = await fetch('http://localhost:5066/api/users/guides', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAllGuides(data);
+        } else {
+          toast.error('Failed to load guides');
+        }
+      } catch (err) {
+        console.error('Error fetching guides:', err);
+        toast.error('Network error loading guides');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGuides();
+  }, []);
+
+  // Extract unique languages
+  const allLanguages = Array.from(new Set(allGuides.flatMap(g => g.languages || [])));
+
+  const filteredGuides = allGuides.filter(guide => {
     const matchesQuery = guide.name.toLowerCase().includes(query.toLowerCase()) || 
-                         guide.serviceArea.toLowerCase().includes(query.toLowerCase());
+                         (guide.serviceArea || '').toLowerCase().includes(query.toLowerCase());
     const matchesLanguage = selectedLanguages.length === 0 || 
-                            selectedLanguages.some(lang => guide.languages.includes(lang));
-    const matchesPrice = guide.pricePerSession >= priceRange[0] && guide.pricePerSession <= priceRange[1];
-    const matchesRating = guide.rating >= minRating;
+                            selectedLanguages.some(lang => (guide.languages || []).includes(lang));
+    const price = guide.pricePerSession || 0;
+    const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
+    const rating = guide.rating || 0;
+    const matchesRating = rating >= minRating;
 
     return matchesQuery && matchesLanguage && matchesPrice && matchesRating;
   });
@@ -36,6 +69,12 @@ export default function Search() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Interactive Guides Map */}
+      <div className="mb-10">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Find Nearby Guides</h1>
+        <NearbyGuidesMap />
+      </div>
+
       <div className="flex flex-col md:flex-row gap-8">
         {/* Filters Sidebar */}
         <div className={`md:w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden md:block'}`}>
@@ -118,9 +157,9 @@ export default function Search() {
         {/* Main Content */}
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-gray-900">
               {filteredGuides.length} Guides Found
-            </h1>
+            </h2>
             
             <div className="flex gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
@@ -141,7 +180,11 @@ export default function Search() {
             </div>
           </div>
 
-          {filteredGuides.length > 0 ? (
+          {isLoading ? (
+            <div className="flex h-[40vh] items-center justify-center">
+              <Loader2 className="h-10 w-10 animate-spin text-forest-600" />
+            </div>
+          ) : filteredGuides.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredGuides.map(guide => (
                 <GuideCard key={guide.id} guide={guide} />

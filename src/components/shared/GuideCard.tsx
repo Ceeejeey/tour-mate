@@ -20,11 +20,22 @@ export default function GuideCard({ guide }: GuideCardProps) {
         <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-bold text-forest-600 shadow-sm">
           ${guide.pricePerSession}/session
         </div>
-        {guide.verified && (
-          <div className="absolute top-3 left-3 bg-blue-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 shadow-sm">
-            <CheckCircle size={12} /> Verified
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
+          {guide.verified && (
+            <div className="bg-blue-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 shadow-sm w-fit">
+              <CheckCircle size={12} /> Verified
+            </div>
+          )}
+          <div className={`backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm w-fit ${guide.isAvailable ? 'bg-green-500/90 text-white' : 'bg-gray-600/90 text-white'}`}>
+            <span className="relative flex h-1.5 w-1.5">
+              {guide.isAvailable && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              )}
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+            </span>
+            {guide.isAvailable ? 'Available' : 'Busy'}
           </div>
-        )}
+        </div>
       </div>
       
       <div className="p-5 flex flex-col flex-grow">

@@ -1,21 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, Users, Map, Compass, TreePine, Mountain, Binoculars } from 'lucide-react';
-import { MOCK_GUIDES } from '../../data/mockData';
+import { Search, MapPin, Users, Map, Compass, TreePine, Mountain, Binoculars, Loader2 } from 'lucide-react';
+import { Guide } from '../../types';
 import GuideCard from '../../components/shared/GuideCard';
 import NearbyGuidesMap from '../../components/tourist/NearbyGuidesMap';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showMap, setShowMap] = useState(false);
+  const [featuredGuides, setFeaturedGuides] = useState<Guide[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchGuides = async () => {
+      try {
+        const token = localStorage.getItem('tourmate_token');
+        const response = await fetch('http://localhost:5066/api/users/guides', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Sort by rating or review count ideally, but for now grab up to 4
+          setFeaturedGuides(data.slice(0, 4));
+        }
+      } catch (err) {
+        console.error('Error fetching featured guides:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchGuides();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate(`/tourist/search?q=${searchQuery}`);
   };
-
-  const featuredGuides = MOCK_GUIDES.slice(0, 4);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -115,11 +139,21 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredGuides.map((guide) => (
-            <GuideCard key={guide.id} guide={guide} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex h-32 items-center justify-center w-full">
+            <Loader2 className="h-10 w-10 animate-spin text-forest-600" />
+          </div>
+        ) : featuredGuides.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredGuides.map((guide) => (
+              <GuideCard key={guide.id} guide={guide} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-100 w-full">
+            <p className="text-gray-500">No guides available at the moment.</p>
+          </div>
+        )}
         
         <div className="mt-8 text-center md:hidden">
           <Link to="/tourist/search" className="text-forest-600 font-medium hover:underline">

@@ -94,7 +94,11 @@ function AppRoutes() {
       <Route path="/admin/login" element={<PublicLayout><AdminLogin /></PublicLayout>} />
       <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
       <Route path="/tourist/home" element={<PublicLayout><TouristHome /></PublicLayout>} />
-      <Route path="/tourist/search" element={<PublicLayout><TouristSearch /></PublicLayout>} />
+      <Route path="/tourist/search" element={
+        <DashboardRoute allowedRoles={['tourist']}>
+          <TouristSearch />
+        </DashboardRoute>
+      } />
       <Route path="/tourist/guide/:id" element={<PublicLayout><GuideProfile /></PublicLayout>} />
       
       {/* Tourist Dashboard Routes - app layout with sidebar */}
