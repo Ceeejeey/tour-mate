@@ -39,6 +39,7 @@ const touristNav: NavItem[] = [
   { name: 'My Bookings', path: '/tourist/bookings', icon: CalendarDays },
   { name: 'Messages', path: '/tourist/chat', icon: MessageCircle },
   { name: 'Payments', path: '/tourist/payment', icon: CreditCard },
+  { name: 'My Reviews', path: '/tourist/reviews', icon: Star },
   { name: 'Profile', path: '/tourist/profile', icon: UserCircle },
 ];
 
@@ -47,6 +48,7 @@ const guideNav: NavItem[] = [
   { name: 'Bookings', path: '/guide/bookings', icon: CalendarDays },
   { name: 'Messages', path: '/guide/chat', icon: MessageCircle },
   { name: 'Earnings', path: '/guide/earnings', icon: DollarSign },
+  { name: 'My Reviews', path: '/guide/reviews', icon: Star },
   { name: 'Profile', path: '/guide/profile', icon: UserCircle },
 ];
 

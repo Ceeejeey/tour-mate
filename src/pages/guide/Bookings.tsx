@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Booking } from '../../types';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
-import { Check, X, Calendar, DollarSign, MessageCircle, Loader2, MapPin } from 'lucide-react';
+import { Check, X, Calendar, DollarSign, MessageCircle, Loader2, MapPin, AlertCircle, Users, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import TouristMapModal from '../../components/guide/TouristMapModal';
@@ -53,7 +53,7 @@ export default function Bookings() {
       
       if (response.ok) {
         toast.success(`Booking ${newStatus === 'confirmed' ? 'accepted' : newStatus === 'cancelled' ? 'declined' : 'completed'} successfully`);
-        fetchBookings(); // Refresh bookings
+        fetchBookings();
       } else {
         const error = await response.json();
         toast.error(error.message || 'Failed to update booking status');
@@ -63,133 +63,192 @@ export default function Bookings() {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'completed': return 'bg-green-50 border-green-200';
+      case 'confirmed': return 'bg-blue-50 border-blue-200';
+      case 'pending': return 'bg-yellow-50 border-yellow-200';
+      case 'cancelled': return 'bg-red-50 border-red-200';
+      default: return 'bg-gray-50 border-gray-200';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-forest-600" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-forest-600" />
+          <span className="text-forest-600 text-sm font-medium">Loading bookings...</span>
+        </div>
       </div>
     );
   }
 
+  const stats = [
+    { label: 'Total Bookings', value: bookings.length, icon: Users, bg: 'bg-forest-50', color: 'text-forest-600' },
+    { label: 'Total Revenue', value: formatCurrency(bookings.filter(b => b.status === 'completed').reduce((sum, b) => sum + b.totalPrice, 0)), icon: DollarSign, bg: 'bg-earth-50', color: 'text-earth-600' },
+    { label: 'Completed', value: bookings.filter(b => b.status === 'completed').length, icon: Check, bg: 'bg-green-50', color: 'text-green-600' },
+    { label: 'Pending Requests', value: bookings.filter(b => b.status === 'pending').length, icon: AlertCircle, bg: 'bg-yellow-50', color: 'text-yellow-600' },
+  ];
+
   return (
     <div className="p-6 lg:p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Manage Bookings</h1>
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-earth-600 to-earth-700 rounded-2xl p-8 mb-8 text-white shadow-lg">
+        <div className="flex items-center gap-4">
+          <div className="bg-earth-500 p-3 rounded-lg">
+            <Calendar className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Manage Bookings</h1>
+            <p className="text-earth-100 text-sm mt-1">View and manage tourist bookings for your tours</p>
+          </div>
+        </div>
+      </div>
 
-      <div className="space-y-6">
-        {bookings.length > 0 ? (
-          bookings.map((booking) => {
-            const tourist = booking.tourist;
-            if (!tourist) return null;
-
-            return (
-              <div key={booking.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 flex flex-col lg:flex-row gap-6">
-                  {/* Tourist Info */}
-                  <div className="flex items-start gap-4 lg:w-1/4">
-                    <img
-                      src={tourist.avatar || "https://ui-avatars.com/api/?name=" + tourist.name}
-                      alt={tourist.name}
-                      className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                    />
-                    <div>
-                      <h3 className="font-bold text-gray-900">{tourist.name}</h3>
-                      <div className="text-sm text-gray-500 mt-1">{tourist.phone || 'No Phone provided'}</div>
-                    </div>
-                  </div>
-
-                  {/* Booking Details */}
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 text-gray-600 mb-1">
-                        <Calendar size={16} />
-                        <span className="text-sm font-medium">Booked On</span>
-                      </div>
-                      <div className="text-gray-900">
-                        {formatDateTime(booking.bookingDate)}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center gap-2 text-gray-600 mb-1">
-                        <DollarSign size={16} />
-                        <span className="text-sm font-medium">Total Price</span>
-                      </div>
-                      <div className="text-gray-900 font-bold">
-                        {formatCurrency(booking.totalPrice)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 text-gray-600 mb-1">
-                        <span className="text-sm font-medium">Status</span>
-                      </div>
-                      <StatusBadge status={booking.status} />
-                    </div>
-
-                    {booking.notes && (
-                      <div className="sm:col-span-2 lg:col-span-3 bg-gray-50 p-3 rounded-lg text-sm text-gray-600 mt-2">
-                        <span className="font-medium text-gray-900">Notes: </span>
-                        {booking.notes}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2 justify-center lg:w-48 border-t lg:border-t-0 lg:border-l border-gray-100 pt-4 lg:pt-0 lg:pl-6">
-                    {booking.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                          className="flex items-center justify-center gap-2 px-4 py-2 bg-forest-600 text-white text-sm font-medium rounded-lg hover:bg-forest-700 transition-colors"
-                        >
-                          <Check size={16} />
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(booking.id, 'cancelled')}
-                          className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors"
-                        >
-                          <X size={16} />
-                          Decline
-                        </button>
-                      </>
-                    )}
-                    {booking.status === 'confirmed' && (
-                      <button
-                        onClick={() => handleStatusChange(booking.id, 'completed')}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors"
-                      >
-                        <Check size={16} />
-                        Mark Completed
-                      </button>
-                    )}
-                    <Link
-                      to="/guide/chat"
-                      className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <MessageCircle size={16} />
-                      Message
-                    </Link>
-                    <button
-                      onClick={() => setSelectedTouristForMap({
-                        name: tourist.name,
-                        phone: tourist.phone,
-                        latitude: tourist.latitude,
-                        longitude: tourist.longitude
-                      })}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 text-sm font-medium rounded-lg hover:bg-indigo-100 transition-colors mt-1 lg:mt-2"
-                    >
-                      <MapPin size={16} />
-                      View Map
-                    </button>
-                  </div>
+      {/* Stats Cards */}
+      {bookings.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {stats.map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm font-medium mb-1">{stat.label}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                </div>
+                <div className={`${stat.bg} p-3 rounded-lg`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
               </div>
-            );
-          })
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Bookings List */}
+      <div>
+        {bookings.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
+            {bookings.map((booking) => {
+              const tourist = booking.tourist;
+              if (!tourist) return null;
+
+              return (
+                <div key={booking.id} className={`bg-white rounded-2xl border-2 overflow-hidden hover:shadow-lg transition-all duration-300 ${getStatusColor(booking.status)}`}>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+                      {/* Tourist Info */}
+                      <div className="md:col-span-1">
+                        <div className="flex items-start gap-4">
+                          <img
+                            src={tourist.avatar || "https://ui-avatars.com/api/?name=" + tourist.name}
+                            alt={tourist.name}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                          />
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-lg">{tourist.name}</h3>
+                            <div className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                              <MapPin size={14} />
+                              {tourist.phone || 'No Phone'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Booking Details */}
+                      <div className="md:col-span-2 grid grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">Booking Date</p>
+                          <div className="flex items-center gap-2 text-gray-900 font-semibold">
+                            <Calendar size={16} className="text-earth-600" />
+                            <span className="text-sm">{formatDateTime(booking.bookingDate)}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">Total Price</p>
+                          <div className="font-bold text-gray-900 text-lg">{formatCurrency(booking.totalPrice)}</div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">Status</p>
+                          <StatusBadge status={booking.status} />
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="md:col-span-1 flex flex-col gap-2">
+                        {booking.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                              className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-forest-600 to-forest-700 text-white text-sm font-semibold rounded-lg hover:shadow-md transition-all w-full"
+                            >
+                              <Check size={16} />
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                              className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors w-full"
+                            >
+                              <X size={16} />
+                              Decline
+                            </button>
+                          </>
+                        )}
+                        
+                        {booking.status === 'confirmed' && (
+                          <button
+                            onClick={() => handleStatusChange(booking.id, 'completed')}
+                            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold rounded-lg hover:shadow-md transition-all w-full"
+                          >
+                            <Check size={16} />
+                            Mark Completed
+                          </button>
+                        )}
+                        
+                        <Link
+                          to="/guide/chat"
+                          className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors w-full"
+                        >
+                          <MessageCircle size={16} />
+                          Message
+                        </Link>
+                        
+                        <button
+                          onClick={() => setSelectedTouristForMap({
+                            name: tourist.name,
+                            phone: tourist.phone,
+                            latitude: tourist.latitude,
+                            longitude: tourist.longitude
+                          })}
+                          className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 border-2 border-indigo-100 text-sm font-medium rounded-lg hover:bg-indigo-100 transition-colors w-full"
+                        >
+                          <MapPin size={16} />
+                          View Map
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Notes Section */}
+                    {booking.notes && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-2">Notes</p>
+                        <p className="text-sm text-gray-600 italic bg-gray-50 p-3 rounded-lg">{booking.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
-            <p className="text-gray-500">No bookings found.</p>
+          <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 p-16 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="bg-gray-100 p-4 rounded-lg">
+                <AlertCircle className="w-8 h-8 text-gray-400" />
+              </div>
+            </div>
+            <p className="text-gray-600 text-lg font-medium mb-2">No bookings yet</p>
+            <p className="text-gray-500 text-sm">When tourists book your tours, they will appear here</p>
           </div>
         )}
       </div>

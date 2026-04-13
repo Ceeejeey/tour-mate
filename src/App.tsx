@@ -20,6 +20,7 @@ import TouristBookings from './pages/tourist/Bookings';
 import TouristChat from './pages/tourist/Chat';
 import TouristPayment from './pages/tourist/Payment';
 import TouristProfile from './pages/tourist/Profile';
+import TouristReviews from './pages/tourist/MyReviews';
 
 // Guide Pages
 import GuideDashboard from './pages/guide/Dashboard';
@@ -27,6 +28,7 @@ import GuideBookings from './pages/guide/Bookings';
 import GuideProfileEdit from './pages/guide/Profile';
 import GuideChat from './pages/guide/Chat';
 import GuideEarnings from './pages/guide/Earnings';
+import GuideReviews from './pages/guide/MyReviews';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
@@ -112,6 +114,11 @@ function AppRoutes() {
           <TouristChat />
         </DashboardRoute>
       } />
+      <Route path="/tourist/reviews" element={
+        <DashboardRoute allowedRoles={['tourist']}>
+          <TouristReviews />
+        </DashboardRoute>
+      } />
       <Route path="/tourist/payment" element={
         <DashboardRoute allowedRoles={['tourist']}>
           <TouristPayment />
@@ -142,6 +149,11 @@ function AppRoutes() {
       <Route path="/guide/chat" element={
         <DashboardRoute allowedRoles={['guide']}>
           <GuideChat />
+        </DashboardRoute>
+      } />
+      <Route path="/guide/reviews" element={
+        <DashboardRoute allowedRoles={['guide']}>
+          <GuideReviews />
         </DashboardRoute>
       } />
       <Route path="/guide/earnings" element={

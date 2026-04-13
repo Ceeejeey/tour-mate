@@ -32,6 +32,8 @@ export interface Booking {
   guideId: string;
   bookingDate: string;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  paymentStatus?: 'pending' | 'paid' | 'refunded';
+  isReviewed?: boolean;
   totalPrice: number;
   notes?: string;
   guide?: {
