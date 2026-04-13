@@ -38,7 +38,7 @@ const touristNav: NavItem[] = [
   { name: 'Find Guides', path: '/tourist/search', icon: Search },
   { name: 'My Bookings', path: '/tourist/bookings', icon: CalendarDays },
   { name: 'Messages', path: '/tourist/chat', icon: MessageCircle },
-  { name: 'Payment', path: '/tourist/payment', icon: CreditCard },
+  { name: 'Payments', path: '/tourist/payment', icon: CreditCard },
   { name: 'Profile', path: '/tourist/profile', icon: UserCircle },
 ];
 

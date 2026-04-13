@@ -3,13 +3,15 @@ import { Link } from 'react-router-dom';
 import { Booking } from '../../types';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
-import { Calendar, MapPin, MessageCircle, CreditCard, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, MessageCircle, CreditCard, Loader2, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import PaymentModal from '../../components/tourist/PaymentModal';
 
 export default function Bookings() {
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedBookingForPayment, setSelectedBookingForPayment] = useState<Booking | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -133,16 +135,24 @@ export default function Bookings() {
 
                   {/* Actions */}
                   <div className="flex md:flex-col gap-2 justify-center md:w-40">
-                    {booking.status === 'confirmed' && (
-                      <Link
-                        to={`/tourist/payment?bookingId=${booking.id}`}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-forest-600 text-white text-sm font-medium rounded-lg hover:bg-forest-700"
+                    {(booking.status === 'confirmed' || booking.status === 'pending') && booking.paymentStatus !== 'paid' ? (
+                      <button
+                        onClick={() => setSelectedBookingForPayment(booking)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-forest-600 text-white text-sm font-medium rounded-lg hover:bg-forest-700 w-full"
                       >
                         <CreditCard size={16} />
                         Pay Now
-                      </Link>
-                    )}
-                    {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                      </button>
+                    ) : booking.paymentStatus === 'paid' ? (
+                      <button
+                        disabled
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed w-full"
+                      >
+                        <CheckCircle size={16} />
+                        Payment Done
+                      </button>
+                    ) : null}
+                    {(booking.status === 'pending' || (booking.status === 'confirmed' && booking.paymentStatus !== 'paid')) && (
                       <button
                         onClick={() => handleCancelBooking(booking.id)}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100"
@@ -164,6 +174,16 @@ export default function Bookings() {
           </div>
         )}
       </div>
+
+      <PaymentModal
+        isOpen={!!selectedBookingForPayment}
+        booking={selectedBookingForPayment}
+        onClose={() => setSelectedBookingForPayment(null)}
+        onSuccess={() => {
+          setSelectedBookingForPayment(null);
+          fetchBookings();
+        }}
+      />
     </div>
   );
 }
