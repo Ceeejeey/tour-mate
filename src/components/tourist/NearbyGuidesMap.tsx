@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import { Guide } from '../../types';
 import { Link } from 'react-router-dom';
-import { MapPin, Navigation, Loader2, Share2, Check } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { MapPin, Navigation, Star } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default Leaflet icon not loading in React
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -32,270 +30,116 @@ const GuideIcon = new Icon({
   iconAnchor: [12, 41],
 });
 
-// Component to recenter map when user location changes
-function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
+function RecenterMap({ lat, lng, zoom }: { lat: number; lng: number, zoom?: number }) {
   const map = useMap();
   useEffect(() => {
-    map.setView([lat, lng], map.getZoom());
-  }, [lat, lng, map]);
+    map.setView([lat, lng], zoom || map.getZoom());
+  }, [lat, lng, zoom, map]);
   return null;
 }
 
-export default function NearbyGuidesMap() {
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [nearbyGuides, setNearbyGuides] = useState<Guide[]>([]);
-  const [allGuides, setAllGuides] = useState<Guide[]>([]);
-  const [isSharing, setIsSharing] = useState(false);
-  const [hasShared, setHasShared] = useState(false);
+interface NearbyGuidesMapProps {
+  guides: Guide[];
+  userLocation: { lat: number; lng: number } | null;
+  radius?: number; // In km
+}
 
-  // Default center (Colombo, Sri Lanka) if user location not found
-  const defaultCenter = { lat: 6.9271, lng: 79.8612 };
-
-  const fetchGuides = async () => {
-    console.log('Fetching guides from API...');
-    try {
-      const token = localStorage.getItem('tourmate_token');
-      const response = await fetch('http://localhost:5066/api/users/guides', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      console.log('API Response status:', response.status);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Raw guides data from API:', data);
-        setAllGuides(data);
-        return data;
-      } else {
-        console.error('Failed to fetch guides, response not OK');
-      }
-    } catch (err) {
-      console.error('Error fetching guides:', err);
-    }
-    return [];
-  };
-
-  const getUserLocation = async () => {
-    console.log('Getting user location...');
-    setIsLoading(true);
-    setError(null);
-
-    const guides = await fetchGuides();
-    console.log(`Fetched ${guides.length} total guides to map.`);
-
-    if (!navigator.geolocation) {
-      console.log('Geolocation not supported.');
-      setError('Geolocation is not supported by your browser');
-      setIsLoading(false);
-      const filtered = guides.filter((g: Guide) => g.latitude != null && g.longitude != null);
-      console.log('Guides with location (no user location):', filtered);
-      setNearbyGuides(filtered);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log(`Successfully got user location: lat=${latitude}, lng=${longitude}`);
-        setUserLocation({ lat: latitude, lng: longitude });
-        findNearbyGuides(latitude, longitude, guides);
-        setIsLoading(false);
-      },
-      (geoError) => {
-        console.warn('Error getting geolocation:', geoError.message);
-        setError('Unable to retrieve your location. Showing default view.');
-        setIsLoading(false);
-        // Still show guides even if user location fails
-        const filtered = guides.filter((g: Guide) => g.latitude != null && g.longitude != null);
-        console.log('Guides with location (fallback):', filtered);
-        setNearbyGuides(filtered);
-      }
-    );
-  };
-
-  const findNearbyGuides = (lat: number, lng: number, guides: Guide[]) => {
-    console.log('Filtering nearby guides relative to user coords...');
-    // Simple distance calculation (Haversine not strictly needed for mock, but good practice)
-    // For now, just showing all guides with coordinates as "nearby" is sufficient for the demo
-    // In a real app, we'd filter by radius (e.g., 50km)
-    
-    // Ensure we parse latitude and longitude as numbers, just in case they're strings from API
-    const guidesWithLocation = guides.filter(g => g.latitude != null && g.longitude != null).map(g => ({
-      ...g,
-      latitude: Number(g.latitude),
-      longitude: Number(g.longitude)
-    }));
-    
-    console.log('Guides with valid lat/lng before sorting:', guidesWithLocation);
-    
-    // Sort by distance (simple Euclidean approximation for small distances)
-    const sortedGuides = guidesWithLocation.sort((a, b) => {
-      const distA = Math.sqrt(Math.pow((a.latitude - lat), 2) + Math.pow((a.longitude - lng), 2));
-      const distB = Math.sqrt(Math.pow((b.latitude - lat), 2) + Math.pow((b.longitude - lng), 2));
-      return distA - distB;
-    });
-
-    console.log('Final sorted nearby guides:', sortedGuides);
-    setNearbyGuides(sortedGuides);
-  };
-
-  const handleShareLocation = async () => {
-    setIsSharing(true);
-    if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported by your browser');
-      setIsSharing(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-
-        try {
-          const token = localStorage.getItem('tourmate_token');
-          const response = await fetch('http://localhost:5066/api/users/me/location', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ latitude, longitude })
-          });
-
-          if (response.ok) {
-            setHasShared(true);
-            toast.success('Location shared! Guides can now find you.');
-          } else {
-            toast.error('Failed to share location securely.');
-          }
-        } catch (err) {
-          console.error('Error sharing location:', err);
-          toast.error('Network error while sharing location.');
-        } finally {
-          setIsSharing(false);
-        }
-      },
-      (error) => {
-        console.warn('Error getting geolocation:', error.message);
-        toast.error('Unable to retrieve your location for sharing.');
-        setIsSharing(false);
-      }
-    );
-  };
-
-  useEffect(() => {
-    // Initial load - try to get location or just show all
-    getUserLocation();
-  }, []);
+export default function NearbyGuidesMap({ guides, userLocation, radius = 5 }: NearbyGuidesMapProps) {
+  // Default to Sri Lanka center if no location
+  const centerLat = userLocation?.lat || 7.8731;
+  const centerLng = userLocation?.lng || 80.7718;
+  const defaultZoom = userLocation ? 12 : 7;
 
   return (
-    <div className="h-[400px] w-full relative rounded-xl overflow-hidden shadow-sm border border-gray-100">
-      {isLoading && (
-        <div className="absolute inset-0 bg-white/80 z-[1000] flex items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="animate-spin text-forest-600" size={32} />
-            <span className="text-gray-600 font-medium">Locating you...</span>
-          </div>
-        </div>
-      )}
-
-      {!isLoading && (
-        <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-          {!userLocation && (
-            <button
-              onClick={getUserLocation}
-              className="bg-white text-gray-700 px-4 py-2 rounded-lg shadow-md font-medium hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors border border-gray-100"
-            >
-              <Navigation size={16} />
-              Find My Location
-            </button>
-          )}
-          
-          <button
-            onClick={hasShared ? undefined : handleShareLocation}
-            disabled={isSharing || hasShared}
-            className={`px-4 py-2 rounded-lg shadow-md font-medium flex items-center justify-center gap-2 transition-all border ${
-              hasShared 
-                ? 'bg-green-50 text-green-700 border-green-200 cursor-default' 
-                : 'bg-forest-600 text-white border-forest-600 hover:bg-forest-700 hover:shadow-lg'
-            }`}
-          >
-            {isSharing ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : hasShared ? (
-              <Check size={16} />
-            ) : (
-              <Share2 size={16} />
-            )}
-            {isSharing ? 'Sharing...' : hasShared ? 'Location Shared' : 'Share Location with Guides'}
-          </button>
-        </div>
-      )}
-
+    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-gray-200">
       <MapContainer
-        center={[defaultCenter.lat, defaultCenter.lng]}
-        zoom={9}
+        center={[centerLat, centerLng]}
+        zoom={defaultZoom}
+        style={{ width: '100%', height: '100%', zIndex: 1 }}
         scrollWheelZoom={true}
-        style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        <RecenterMap lat={centerLat} lng={centerLng} zoom={defaultZoom} />
+
+        {/* User Location */}
         {userLocation && (
           <>
-            <RecenterMap lat={userLocation.lat} lng={userLocation.lng} />
             <Marker position={[userLocation.lat, userLocation.lng]} icon={UserIcon}>
               <Popup>
-                <div className="font-bold text-center">You are here</div>
+                <div className="text-center">
+                  <div className="font-bold text-gray-900 border-b pb-1 mb-1">Your Location</div>
+                  <div className="text-xs text-gray-500">Searching {radius}km radius</div>
+                </div>
               </Popup>
             </Marker>
+            
+            <Circle 
+              center={[userLocation.lat, userLocation.lng]} 
+              radius={radius * 1000} // Circle radius is in meters
+              pathOptions={{ fillColor: '#2D8F5E', color: '#2D8F5E', weight: 1, fillOpacity: 0.1 }}
+            />
           </>
         )}
 
-        {nearbyGuides.map((guide) => (
-          <Marker
-            key={guide.id}
-            position={[guide.latitude!, guide.longitude!]}
-            icon={GuideIcon}
-          >
-            <Popup>
-              <div className="min-w-[200px]">
-                <div className="flex items-center gap-3 mb-2">
-                  <img
-                    src={guide.avatar}
-                    alt={guide.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-sm">{guide.name}</h3>
-                    <div className="flex items-center text-xs text-gray-500">
-                      <MapPin size={10} className="mr-1" />
-                      {guide.serviceArea}
+        {/* Guide Markers */}
+        {guides.map((guide) => {
+          // Skip if missing valid coordinates
+          if (guide.latitude == null || guide.longitude == null || 
+              (guide.latitude === 0 && guide.longitude === 0)) {
+            return null;
+          }
+          
+          return (
+            <Marker
+              key={guide.id}
+              position={[guide.latitude, guide.longitude]}
+              icon={GuideIcon}
+            >
+              <Popup className="custom-popup">
+                <div className="w-56 overflow-hidden rounded-lg">
+                  <div className="h-24 overflow-hidden relative">
+                    <img 
+                      src={guide.avatar || 'https://via.placeholder.com/150'} 
+                      alt={guide.name} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded text-xs font-bold text-forest-700 shadow-sm backdrop-blur-sm">
+                      ${guide.pricePerSession}/session
                     </div>
                   </div>
+                  
+                  <div className="p-3 bg-white">
+                    <h3 className="font-bold text-gray-900 text-base mb-1 truncate">{guide.name}</h3>
+                    
+                    <div className="flex items-center text-sm text-gray-600 mb-2">
+                      <Star className="w-3.5 h-3.5 text-yellow-400 mr-1 fill-yellow-400" />
+                      <span className="font-medium mr-1">{guide.rating || 'New'}</span>
+                      <span className="text-gray-400 text-xs">({guide.reviewCount || 0} reviews)</span>
+                    </div>
+
+                    <div className="space-y-1 mb-3">
+                      <div className="flex items-start text-xs text-gray-600">
+                        <MapPin className="w-3.5 h-3.5 mr-1.5 mt-0.5 text-forest-600 flex-shrink-0" />
+                        <span className="line-clamp-2">{guide.serviceArea || 'Location not specified'}</span>
+                      </div>
+                    </div>
+
+                    <Link
+                      to={`/tourist/guide/${guide.id}`}
+                      className="block w-full py-2 bg-gradient-to-r from-forest-600 to-forest-700 hover:from-forest-700 hover:to-forest-800 text-white text-center rounded-lg text-sm font-medium transition-all shadow-sm"
+                    >
+                      View Profile
+                    </Link>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-600 mb-2 line-clamp-2">{guide.bio}</p>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-bold text-forest-600 text-sm">${guide.pricePerSession}/session</span>
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">
-                    ★ {guide.rating}
-                  </span>
-                </div>
-                <Link
-                  to={`/tourist/guide/${guide.id}`}
-                  className="block w-full bg-forest-600 text-white text-center py-1.5 rounded text-xs font-medium hover:bg-forest-700 transition"
-                >
-                  Book Now
-                </Link>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );
