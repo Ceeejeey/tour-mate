@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Star, CheckCircle, XCircle, X } from 'lucide-react';
+import { Search, MapPin, Star, CheckCircle, XCircle, X, Loader2, AlertCircle, Award } from 'lucide-react';
 import { Guide } from '../../types';
 import toast from 'react-hot-toast';
 
@@ -7,6 +7,8 @@ export default function Guides() {
   const [searchTerm, setSearchTerm] = useState('');
   const [guides, setGuides] = useState<Guide[]>([]);
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchGuides();
@@ -14,6 +16,7 @@ export default function Guides() {
 
   const fetchGuides = async () => {
     try {
+      setIsLoading(true);
       const token = localStorage.getItem('tourmate_token');
       const response = await fetch('http://localhost:5066/api/users/guides', {
         headers: {
@@ -23,9 +26,14 @@ export default function Guides() {
       if (response.ok) {
         const data = await response.json();
         setGuides(data);
+      } else {
+        setError('Failed to fetch guides');
       }
     } catch (error) {
       console.error('Failed to fetch guides', error);
+      setError('Network error while loading guides');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -60,106 +68,142 @@ export default function Guides() {
   };
 
   const toggleAvailability = (id: string) => {
-    // Only guides can update availability from backend, but kept for UI visual if needed
-    // setGuides(guides.map(g => g.id === id ? { ...g, isAvailable: !g.isAvailable } : g));
+    // Only guides can update availability from backend
   };
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Guides Management</h1>
-        <div className="relative w-64">
-          <input
-            type="text"
-            placeholder="Search guides..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600"
-          />
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-forest-600 to-forest-700 rounded-2xl p-8 mb-8 text-white shadow-lg">
+        <div className="flex items-center gap-4">
+          <div className="bg-forest-500 p-3 rounded-lg">
+            <Award className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Guides Management</h1>
+            <p className="text-forest-100 text-sm mt-1">Manage and verify tour guides on your platform</p>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-500">
-              <tr>
-                <th className="px-6 py-3 font-medium">Guide</th>
-                <th className="px-6 py-3 font-medium">Service Area</th>
-                <th className="px-6 py-3 font-medium">Rating</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3 font-medium">Verified</th>
-                <th className="px-6 py-3 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredGuides.map((guide) => (
-                <tr key={guide.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={guide.avatar}
-                        alt={guide.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900">{guide.name}</div>
-                        <div className="text-xs text-gray-500">{guide.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin size={14} /> {guide.serviceArea}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-1 text-gray-900">
-                      <Star size={14} className="text-yellow-400 fill-current" />
-                      {guide.rating} ({guide.reviewCount})
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span 
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer ${
-                        guide.isAvailable 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                      onClick={() => toggleAvailability(guide.id)}
-                    >
-                      {guide.isAvailable ? 'Available' : 'Unavailable'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      {guide.verified ? (
-                        <CheckCircle size={20} className="text-blue-500" />
-                      ) : (
-                        <XCircle size={20} className="text-gray-300" />
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => setSelectedGuide(guide)}
-                      aria-label={guide.verified ? 'View guide details' : 'Open guide approval modal'}
-                      className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition ${
-                          guide.verified
-                            ? 'bg-white border border-forest-600 text-forest-600 hover:bg-forest-50'
-                            : 'bg-forest-600 text-white hover:bg-forest-700'
-                        }`}
-                    >
-                      {guide.verified ? 'View Details' : 'Approve Guide'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Search Bar */}
+      <div className="mb-8 flex gap-4">
+        <div className="relative flex-1 max-w-md">
+          <input
+            type="text"
+            placeholder="Search guides by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-forest-500 focus:border-transparent transition-all"
+          />
+          <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
         </div>
       </div>
+
+      {error ? (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-8 rounded-xl flex flex-col items-center justify-center">
+          <AlertCircle className="h-10 w-10 mb-4 text-red-400" />
+          <p className="font-medium text-lg">{error}</p>
+          <button 
+            onClick={fetchGuides}
+            className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : isLoading ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center">
+          <Loader2 className="h-10 w-10 text-forest-600 animate-spin mb-4" />
+          <p className="text-gray-500 font-medium">Loading guides...</p>
+        </div>
+      ) : filteredGuides.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-gray-900 mb-1">No guides found</h3>
+          <p className="text-gray-500">{searchTerm ? `No guides matching "${searchTerm}"` : "No guides registered yet."}</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-600 border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider">Guide</th>
+                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider">Service Area</th>
+                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider">Rating</th>
+                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider">Verified</th>
+                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredGuides.map((guide) => (
+                  <tr key={guide.id} className="hover:bg-forest-50/30 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={guide.avatar}
+                          alt={guide.name}
+                          className="w-11 h-11 rounded-full object-cover border-2 border-forest-100 shadow-sm"
+                        />
+                        <div>
+                          <div className="font-semibold text-gray-900">{guide.name}</div>
+                          <div className="text-xs text-gray-500 font-mono">{guide.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 text-gray-700 font-medium">
+                        <MapPin size={14} className="text-forest-500" /> {guide.serviceArea}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 text-gray-900 font-semibold">
+                        <Star size={14} className="text-yellow-400 fill-current" />
+                        {guide.rating?.toFixed(1)} <span className="text-gray-500 font-normal">({guide.reviewCount})</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span 
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                          guide.isAvailable 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                        onClick={() => toggleAvailability(guide.id)}
+                      >
+                        {guide.isAvailable ? '●  Available' : '●  Unavailable'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-center">
+                        {guide.verified ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800"><CheckCircle size={14} /> Verified</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800"><XCircle size={14} /> Pending</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => setSelectedGuide(guide)}
+                        aria-label={guide.verified ? 'View guide details' : 'Open guide approval modal'}
+                        className={`inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+                            guide.verified
+                              ? 'bg-white border border-forest-600 text-forest-600 hover:bg-forest-50 hover:shadow-md'
+                              : 'bg-forest-600 text-white hover:bg-forest-700 hover:shadow-lg'
+                          }`}
+                      >
+                        {guide.verified ? 'View Details' : 'Approve Guide'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Guide Details Modal */}
       {selectedGuide && (
