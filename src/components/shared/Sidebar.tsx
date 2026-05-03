@@ -40,6 +40,7 @@ const touristNav: NavItem[] = [
   { name: 'Messages', path: '/tourist/chat', icon: MessageCircle },
   { name: 'Payments', path: '/tourist/payment', icon: CreditCard },
   { name: 'My Reviews', path: '/tourist/reviews', icon: Star },
+  { name: 'Complaints', path: '/tourist/complaints', icon: AlertTriangle },
   { name: 'Profile', path: '/tourist/profile', icon: UserCircle },
 ];
 
@@ -49,6 +50,7 @@ const guideNav: NavItem[] = [
   { name: 'Messages', path: '/guide/chat', icon: MessageCircle },
   { name: 'Earnings', path: '/guide/earnings', icon: DollarSign },
   { name: 'My Reviews', path: '/guide/reviews', icon: Star },
+  { name: 'Complaints', path: '/guide/complaints', icon: AlertTriangle },
   { name: 'Profile', path: '/guide/profile', icon: UserCircle },
 ];
 

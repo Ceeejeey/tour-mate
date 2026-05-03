@@ -21,6 +21,7 @@ import TouristChat from './pages/tourist/Chat';
 import TouristPayment from './pages/tourist/Payment';
 import TouristProfile from './pages/tourist/Profile';
 import TouristReviews from './pages/tourist/MyReviews';
+import MyComplaints from './components/shared/MyComplaints';
 
 // Guide Pages
 import GuideDashboard from './pages/guide/Dashboard';
@@ -118,8 +119,11 @@ function AppRoutes() {
         <DashboardRoute allowedRoles={['tourist']}>
           <TouristReviews />
         </DashboardRoute>
-      } />
-      <Route path="/tourist/payment" element={
+      } />      <Route path="/tourist/complaints" element={
+        <DashboardRoute allowedRoles={['tourist']}>
+          <MyComplaints />
+        </DashboardRoute>
+      } />      <Route path="/tourist/payment" element={
         <DashboardRoute allowedRoles={['tourist']}>
           <TouristPayment />
         </DashboardRoute>
@@ -139,6 +143,11 @@ function AppRoutes() {
       <Route path="/guide/bookings" element={
         <DashboardRoute allowedRoles={['guide']}>
           <GuideBookings />
+        </DashboardRoute>
+      } />
+      <Route path="/guide/complaints" element={
+        <DashboardRoute allowedRoles={['guide']}>
+          <MyComplaints />
         </DashboardRoute>
       } />
       <Route path="/guide/profile" element={
@@ -209,6 +218,7 @@ export default function App() {
   return (
     <Router>
       <AuthProvider>
+        <Toaster position="top-right" />
         <AppRoutes />
       </AuthProvider>
     </Router>

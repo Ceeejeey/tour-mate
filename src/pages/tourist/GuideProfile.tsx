@@ -6,6 +6,7 @@ import { MapPin, Languages, Zap, CheckCircle, MessageCircle, Shield, Award, Load
 import { Guide } from '../../types';
 import NotFound from '../NotFound';
 import { formatCurrency } from '../../lib/utils';
+import toast from 'react-hot-toast';
 
 export default function GuideProfile() {
   const { id } = useParams();
@@ -104,11 +105,15 @@ export default function GuideProfile() {
       });
 
       if (response.ok) {
+        toast.success(`Successfully booked ${guide.name}!`);
         navigate('/tourist/bookings');
       } else {
-        console.error('Failed to create booking');
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message || 'Failed to create booking');
+        console.error('Failed to create booking', errorData);
       }
     } catch (err) {
+      toast.error('An error occurred. Please try again.');
       console.error('Error submitting booking:', err);
     } finally {
       setIsSubmitting(false);
