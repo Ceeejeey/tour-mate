@@ -4,13 +4,45 @@ import { useAuth } from '../../context/AuthContext';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { Role } from '../../types';
 import toast from 'react-hot-toast';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../../lib/firebase';
 
 export default function Login() {
   const [email, setEmail] = useState('alice@example.com');
   const [password, setPassword] = useState('password');
   const [role, setRole] = useState<Role>('tourist');
-  const { login, isLoading } = useAuth();
+  const { login, googleLogin, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      const payload = {
+        email: user.email,
+        name: user.displayName,
+        avatarUrl: user.photoURL,
+        role: role // pass the selected role from the tabs
+      };
+
+      const response = await googleLogin(payload);
+      
+      if (response && response.requiresRegistration) {
+        toast('Please complete your profile to continue.', { icon: 'ℹ️' });
+        navigate('/complete-google-signup', { state: payload });
+      } else {
+        toast.success('Successfully logged in with Google!', { position: 'top-right' });
+        // Assume default route or deduce from role
+        const role = response?.user?.role || 'tourist';
+        if (role === 'tourist') navigate('/tourist/home');
+        else if (role === 'guide') navigate('/guide/dashboard');
+        else if (role === 'admin') navigate('/admin/dashboard');
+      }
+    } catch (err: any) {
+      toast.error('Google login failed. ' + (err.message || ''), { position: 'top-right' });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,6 +175,8 @@ export default function Login() {
             <div className="mt-6 grid grid-cols-1 gap-3">
               <button
                 type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
                 className="w-full inline-flex items-center justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">

@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { User, Mail, Lock, Phone, MapPin, Globe, Upload, Loader2 } from 'lucide-react';
 import { Role } from '../../types';
 import toast from 'react-hot-toast';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../../lib/firebase';
 
 export default function Register() {
   const [role, setRole] = useState<Role>('tourist');
@@ -11,8 +13,37 @@ export default function Register() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const { register } = useAuth() as any;
+  const { register, googleLogin } = useAuth() as any;
   const navigate = useNavigate();
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      const payload = {
+        email: user.email,
+        name: user.displayName,
+        avatarUrl: user.photoURL,
+        role: role // pass the selected role from the tabs
+      };
+
+      const response = await googleLogin(payload);
+      
+      if (response && response.requiresRegistration) {
+        toast('Please complete your profile to continue.', { icon: 'ℹ️' });
+        navigate('/complete-google-signup', { state: payload });
+      } else {
+        toast.success('Successfully logged in with Google!', { position: 'top-right' });
+        const userRole = response?.user?.role || 'tourist';
+        if (userRole === 'tourist') navigate('/tourist/home');
+        else if (userRole === 'guide') navigate('/guide/dashboard');
+        else if (userRole === 'admin') navigate('/admin/dashboard');
+      }
+    } catch (err: any) {
+      toast.error('Google login failed. ' + (err.message || ''), { position: 'top-right' });
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files.length ? e.target.files[0] : null;
@@ -397,7 +428,9 @@ export default function Register() {
           <div className="mt-6 grid grid-cols-1 gap-3">
             <button
               type="button"
-              className="w-full inline-flex items-center justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="w-full inline-flex items-center justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />

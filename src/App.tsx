@@ -11,6 +11,7 @@ import NotFound from './pages/NotFound';
 import Login from './pages/auth/Login';
 import AdminLogin from './pages/auth/AdminLogin';
 import Register from './pages/auth/Register';
+import CompleteGoogleSignup from './pages/auth/CompleteGoogleSignup';
 
 // Tourist Pages
 import TouristHome from './pages/tourist/Home';
@@ -96,6 +97,7 @@ function AppRoutes() {
       <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />
       <Route path="/admin/login" element={<PublicLayout><AdminLogin /></PublicLayout>} />
       <Route path="/register" element={<PublicLayout><Register /></PublicLayout>} />
+      <Route path="/complete-google-signup" element={<PublicLayout><CompleteGoogleSignup /></PublicLayout>} />
       <Route path="/tourist/home" element={<PublicLayout><TouristHome /></PublicLayout>} />
       <Route path="/tourist/search" element={
         <DashboardRoute allowedRoles={['tourist']}>

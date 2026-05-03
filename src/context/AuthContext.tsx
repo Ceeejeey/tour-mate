@@ -4,6 +4,7 @@ import { User, Guide, Role } from '../types';
 interface AuthContextType {
   user: User | Guide | null;
   login: (email: string, role: Role, password?: string) => Promise<void>;
+  googleLogin: (tokenData: any) => Promise<any>;
   register: (data: any) => Promise<void>;
   logout: () => void;
   updateUser: (userData: any) => void;
@@ -77,6 +78,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const googleLogin = async (tokenData: any) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5066/api/auth/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tokenData)
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Google login failed');
+      }
+
+      if (data.requiresRegistration) {
+        return data; // Front end will route to /complete-google-signup
+      } else {
+        localStorage.setItem('tourmate_token', data.token);
+        await fetchProfile(data.token);
+        return { success: true };
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const register = async (data: FormData) => {
     setIsLoading(true);
     try {
@@ -109,7 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, updateUser, isAuthenticated: !!user, isLoading }}>
+    <AuthContext.Provider value={{ user, login, googleLogin, register, logout, updateUser, isAuthenticated: !!user, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
