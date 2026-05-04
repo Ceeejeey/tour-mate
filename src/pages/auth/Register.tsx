@@ -10,6 +10,8 @@ import { auth, googleProvider } from '../../lib/firebase';
 export default function Register() {
   const [role, setRole] = useState<Role>('tourist');
   const [isLoading, setIsLoading] = useState(false);
+  const [languagesList, setLanguagesList] = useState<string[]>([]);
+  const [languageInput, setLanguageInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -64,6 +66,22 @@ export default function Register() {
     }
     setSelectedFile(null);
     setPreview(null);
+  };
+
+  const handleLanguageKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = languageInput.trim();
+      if (val && !languagesList.some(l => l.toLowerCase() === val.toLowerCase())) {
+        const formattedLang = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+        setLanguagesList([...languagesList, formattedLang]);
+      }
+      setLanguageInput('');
+    }
+  };
+
+  const removeLanguage = (langToRemove: string) => {
+    setLanguagesList(languagesList.filter(lang => lang !== langToRemove));
   };
 
   const validateForm = (formData: FormData): boolean => {
@@ -162,9 +180,8 @@ export default function Register() {
         data.append('languages', formData.get('languages') as string);
         data.append('experience', formData.get('experienceSkills') as string);
         
-        const photo = formData.get('file-upload') as File;
-        if (photo && photo.size > 0) {
-          data.append('profilePhoto', photo);
+        if (selectedFile) {
+          data.append('profilePhoto', selectedFile);
         }
       }
 
@@ -329,14 +346,33 @@ export default function Register() {
             {role === 'guide' && (
               <>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Languages Spoken</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Languages Spoken (Press Enter to add)</label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {languagesList.map((lang, index) => (
+                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-forest-100 text-forest-800">
+                        {lang}
+                        <button
+                          type="button"
+                          onClick={() => removeLanguage(lang)}
+                          className="ml-1.5 inline-flex items-center justify-center p-0.5 rounded-full text-forest-400 hover:bg-forest-200 hover:text-forest-500 focus:outline-none"
+                        >
+                          <span className="sr-only">Remove {lang}</span>
+                          <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                   <input
-                    name="languages"
                     type="text"
+                    value={languageInput}
+                    onChange={(e) => setLanguageInput(e.target.value)}
+                    onKeyDown={handleLanguageKeyDown}
                     className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 sm:text-sm"
-                    placeholder="English, Sinhala, Tamil (comma separated)"
-                    
+                    placeholder="Type a language and press Enter"
                   />
+                  <input type="hidden" name="languages" value={languagesList.join(',')} />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Experience & Skills</label>

@@ -1,17 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { MOCK_BOOKINGS, MOCK_GUIDES, MOCK_TOURISTS, MOCK_PAYMENTS } from '../../data/mockData';
 import { formatCurrency } from '../../lib/utils';
 import { Users, Map, Calendar, DollarSign, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
-  const totalUsers = MOCK_TOURISTS.length;
-  const totalGuides = MOCK_GUIDES.length;
-  const totalBookings = MOCK_BOOKINGS.length;
-  const totalRevenue = MOCK_PAYMENTS.reduce((sum, p) => sum + p.amount, 0);
+  const [data, setData] = useState({
+    tourists: 0,
+    guides: 0,
+    bookings: [],
+    payments: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const monthlyBookings = MOCK_BOOKINGS.reduce((acc, booking) => {
-    const month = new Date(booking.bookingDate).toLocaleString('default', { month: 'short' });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('tourmate_token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        const [touristsRes, guidesRes, bookingsRes, paymentsRes] = await Promise.all([
+          fetch('http://localhost:5066/api/users/tourists', { headers }),
+          fetch('http://localhost:5066/api/users/guides', { headers }),
+          fetch('http://localhost:5066/api/bookings', { headers }), // For admin, this returns all
+          fetch('http://localhost:5066/api/payments/history', { headers })
+        ]);
+
+        const tourists = touristsRes.ok ? await touristsRes.json() : [];
+        const guides = guidesRes.ok ? await guidesRes.json() : [];
+        const bookings = bookingsRes.ok ? await bookingsRes.json() : [];
+        const payments = paymentsRes.ok ? await paymentsRes.json() : [];
+
+        setData({
+          tourists: tourists.length || 0,
+          guides: guides.length || 0,
+          bookings: bookings || [],
+          payments: payments || []
+        });
+      } catch (err) {
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+  const totalUsers = data.tourists;
+  const totalGuides = data.guides;
+  const totalBookings = data.bookings.length;
+  // Calculate total revenue from valid payments
+  const totalRevenue = data.payments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+
+  const monthlyBookings = data.bookings.reduce((acc: any[], booking: any) => {
+    const date = new Date(booking.bookingDate || booking.createdAt || new Date());
+    const month = date.toLocaleString('default', { month: 'short' });
     const existing = acc.find(d => d.name === month);
     if (existing) {
       existing.bookings += 1;
@@ -19,12 +63,12 @@ export default function Dashboard() {
       acc.push({ name: month, bookings: 1 });
     }
     return acc;
-  }, [] as { name: string; bookings: number }[]);
+  }, []);
 
   const monthsOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  monthlyBookings.sort((a, b) => monthsOrder.indexOf(a.name) - monthsOrder.indexOf(b.name));
+  monthlyBookings.sort((a: any, b: any) => monthsOrder.indexOf(a.name) - monthsOrder.indexOf(b.name));
 
-  const statusData = MOCK_BOOKINGS.reduce((acc, booking) => {
+  const statusData = data.bookings.reduce((acc: any[], booking: any) => {
     const existing = acc.find(d => d.name === booking.status);
     if (existing) {
       existing.value += 1;
@@ -32,7 +76,7 @@ export default function Dashboard() {
       acc.push({ name: booking.status, value: 1 });
     }
     return acc;
-  }, [] as { name: string; value: number }[]);
+  }, []);
 
   const COLORS = ['#4AADE5', '#2D8F5E', '#E8A838', '#E85D5D'];
 
@@ -42,6 +86,10 @@ export default function Dashboard() {
     { label: 'Total Bookings', value: totalBookings, icon: Calendar, lightBg: 'bg-earth-50', textColor: 'text-earth-600' },
     { label: 'Total Revenue', value: formatCurrency(totalRevenue), icon: DollarSign, lightBg: 'bg-forest-50', textColor: 'text-forest-600' },
   ];
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-forest-600">Loading dashboard...</div>;
+  }
 
   return (
     <div className="p-6 lg:p-8">

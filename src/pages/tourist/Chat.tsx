@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Send, Search, MoreVertical, Phone, Video, Clock, Check, CheckCheck, MessageCircle } from 'lucide-react';
+import { Send, Search, MoreVertical, Check, CheckCheck, MessageCircle, Moon, Sun, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
 import toast from 'react-hot-toast';
@@ -20,9 +20,37 @@ export default function Chat() {
   const [connection, setConnection] = useState<HubConnection | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isVisibleOptions, setIsVisibleOptions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = conversations.find(c => c.id === activeChatId);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+        setShowOptions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggleVisibility = async () => {
+    const newState = !isVisibleOptions;
+    setIsVisibleOptions(newState);
+    if (connection && connection.state === 'Connected') {
+      try {
+        await connection.invoke('SetVisibility', newState);
+        toast.success(newState ? 'You are now visible' : 'You are now hidden');
+      } catch (e) {
+        console.error('Failed to change visibility', e);
+        toast.error('Failed to change visibility');
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -33,68 +61,96 @@ export default function Chat() {
         });
         if (res.ok) {
           const data = await res.json();
-          setConversations(data);
-          setFilteredConversations(data);
-          if (data.length > 0 && !activeChatId && !preSelectedUserId) {
-            setActiveChatId(data[0].id);
+          let convs = [...data];
+
+          // If there's a preSelectedUserId and it's not in the active conversations fetch its info
+          if (preSelectedUserId) {
+            const parsedId = parseInt(preSelectedUserId);
+            const exists = convs.find(c => c.id === parsedId);
+            if (!exists) {
+              try {
+                const userRes = await fetch(`http://localhost:5066/api/users/${parsedId}`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (userRes.ok) {
+                  const userData = await userRes.json();
+                  convs = [{
+                    id: userData.id,
+                    name: userData.name,
+                    avatar: userData.avatar,
+                    role: userData.role || 'user'
+                  }, ...convs];
+                }
+              } catch(e) {
+                console.error("Failed to fetch preselected user details", e);
+              }
+            }
+            setActiveChatId(parsedId);
+          } else if (convs.length > 0 && !activeChatId) {
+            setActiveChatId(convs[0].id);
           }
+
+          setConversations(convs);
+          setFilteredConversations(convs);
         }
       } catch (err) {
         console.error(err);
       }
     };
     fetchConversations();
-
-    const token = localStorage.getItem('tourmate_token');
-    if (token) {
-      const newConnection = new HubConnectionBuilder()
-        .withUrl('http://localhost:5066/chathub', {
-          accessTokenFactory: () => token
-        })
-        .configureLogging(LogLevel.Information)
-        .withAutomaticReconnect()
-        .build();
-
-      setConnection(newConnection);
-    }
-  }, []);
+  }, [preSelectedUserId]);
 
   useEffect(() => {
-    if (connection) {
-      connection.start()
-        .then(() => {
-          connection.invoke('GetOnlineUsers').then((users: number[]) => {
-            setOnlineUsers(users);
-          });
+    const token = localStorage.getItem('tourmate_token');
+    if (!token) return;
 
-          connection.on('UserOnline', (userId: number) => {
-            setOnlineUsers(prev => [...new Set([...prev, userId])]);
-          });
+    const newConnection = new HubConnectionBuilder()
+      .withUrl('http://localhost:5066/chathub', {
+        accessTokenFactory: () => token
+      })
+      .configureLogging(LogLevel.Information)
+      .withAutomaticReconnect()
+      .build();
 
-          connection.on('UserOffline', (userId: number) => {
-            setOnlineUsers(prev => prev.filter(id => id !== userId));
-          });
-          
-          connection.on('ReceiveMessage', (message) => {
-            setMessages(prev => {
-              if (!prev.find(m => m.id === message.id)) {
-                return [...prev, message];
-              }
-              return prev;
-            });
-            scrollToBottom();
-          });
-        })
-        .catch(e => console.log('Connection failed: ', e));
+    setConnection(newConnection);
 
-      return () => {
-        connection.off('UserOnline');
-        connection.off('UserOffline');
-        connection.off('ReceiveMessage');
-        connection.stop();
-      };
-    }
-  }, [connection]);
+    newConnection.start()
+      .then(() => {
+        newConnection.invoke('GetOnlineUsers').then((users: number[]) => {
+          setOnlineUsers(users);
+        });
+
+        newConnection.on('UserOnline', (userId: number) => {
+          setOnlineUsers(prev => [...new Set([...prev, userId])]);
+        });
+
+        newConnection.on('UserOffline', (userId: number) => {
+          setOnlineUsers(prev => prev.filter(id => id !== userId));
+        });
+        
+        newConnection.on('ReceiveMessage', (message) => {
+          setMessages(prev => {
+            if (!prev.find(m => m.id === message.id)) {
+              return [...prev, message];
+            }
+            return prev;
+          });
+          scrollToBottom();
+        });
+      })
+      .catch(e => {
+        if (e.name !== 'AbortError') {
+          console.log('Connection failed: ', e);
+        }
+      });
+
+    return () => {
+      newConnection.off('UserOnline');
+      newConnection.off('UserOffline');
+      newConnection.off('ReceiveMessage');
+      newConnection.stop();
+    };
+  }, []);
 
   useEffect(() => {
     if (!activeChatId) return;
@@ -134,6 +190,11 @@ export default function Chat() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageInput.trim() || !activeChatId || !connection) return;
+
+    if (connection.state !== 'Connected') {
+      toast.error('Chat connection is not ready. Please wait or refresh.');
+      return;
+    }
 
     try {
       await connection.invoke('SendMessage', activeChatId, messageInput);
@@ -223,23 +284,23 @@ export default function Chat() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col h-full bg-gray-50/50">
+        <div className={`flex-1 flex flex-col h-full ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50/50'} transition-colors duration-300`}>
           {activeChatId && activeConversation ? (
             <>
               {/* Chat Header */}
-              <div className="p-5 bg-white border-b border-gray-200 flex justify-between items-center shadow-sm">
+              <div className={`p-5 border-b flex justify-between items-center shadow-sm transition-colors duration-300 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className="flex items-center gap-3">
                   <img
                     src={activeConversation.avatar || `https://ui-avatars.com/api/?name=${activeConversation.name}&background=2D5F2E&color=fff`}
                     alt={activeConversation.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                    className={`w-12 h-12 rounded-full object-cover border-2 shadow-sm ${isDarkMode ? 'border-gray-700' : 'border-white'}`}
                   />
                   <div>
                     <Link 
                       to={`/tourist/guide/${activeConversation.id}`}
                       className="hover:text-forest-600 transition-colors"
                     >
-                      <h3 className="font-bold text-gray-900">{activeConversation.name}</h3>
+                      <h3 className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{activeConversation.name}</h3>
                     </Link>
                     <div className="flex items-center gap-1">
                       {onlineUsers.includes(activeConversation.id) ? (
@@ -256,16 +317,34 @@ export default function Chat() {
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  <button className="p-2.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
-                    <Phone size={20} />
-                  </button>
-                  <button className="p-2.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
-                    <Video size={20} />
-                  </button>
-                  <button className="p-2.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+                <div className="relative" ref={optionsRef}>
+                  <button 
+                    onClick={() => setShowOptions(!showOptions)}
+                    className="p-2.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                  >
                     <MoreVertical size={20} />
                   </button>
+                  
+                  {showOptions && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
+                      <div className="p-2">
+                        <button 
+                          onClick={() => setIsDarkMode(!isDarkMode)}
+                          className="flex items-center gap-3 w-full p-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+                          <span>{isDarkMode ? 'Light Theme' : 'Dark Theme'}</span>
+                        </button>
+                        <button 
+                          onClick={toggleVisibility}
+                          className="flex items-center gap-3 w-full p-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          {isVisibleOptions ? <EyeOff size={18} /> : <Eye size={18} />}
+                          <span>{isVisibleOptions ? 'Hide Online Status' : 'Show Online Status'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -274,7 +353,7 @@ export default function Chat() {
                 {Object.entries(groupMessagesByDate(currentMessages)).map(([date, msgs]) => (
                   <div key={date}>
                     <div className="flex justify-center mb-4">
-                      <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{date}</span>
+                      <span className={`text-xs px-3 py-1 rounded-full ${isDarkMode ? 'text-gray-300 bg-gray-800' : 'text-gray-400 bg-gray-100'}`}>{date}</span>
                     </div>
                     {msgs.map((msg) => {
                       const isMe = Number(msg.senderId) === Number(user?.id);
@@ -296,12 +375,14 @@ export default function Chat() {
                                 className={`rounded-3xl px-5 py-3 shadow-sm transition-all hover:shadow-md ${
                                   isMe
                                     ? 'bg-forest-600 text-white rounded-br-none'
-                                    : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
+                                    : isDarkMode 
+                                      ? 'bg-gray-800 text-gray-100 rounded-bl-none border border-gray-700'
+                                      : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
                                 }`}
                               >
                                 <p className="text-sm leading-relaxed break-words">{msg.content}</p>
                               </div>
-                              <div className={`flex items-center gap-1.5 mt-1 text-xs ${isMe ? 'text-gray-400' : 'text-gray-400'}`}>
+                              <div className={`flex items-center gap-1.5 mt-1 text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                                 <span>{format(new Date(msg.timestamp), 'h:mm a')}</span>
                                 {isMe && <CheckCheck size={14} className="text-forest-500" />}
                               </div>
@@ -319,7 +400,7 @@ export default function Chat() {
                       alt=""
                       className="w-8 h-8 rounded-full object-cover"
                     />
-                    <div className="bg-white px-4 py-2 rounded-full border border-gray-200 flex gap-1.5">
+                    <div className={`px-4 py-2 rounded-full border flex gap-1.5 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                       <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
                       <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
                       <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></span>
@@ -330,14 +411,18 @@ export default function Chat() {
               </div>
 
               {/* Message Input */}
-              <div className="p-5 bg-white border-t border-gray-200">
+              <div className={`p-5 border-t transition-colors duration-300 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                 <form onSubmit={handleSendMessage} className="flex gap-3">
                   <input
                     type="text"
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 bg-gray-100 border border-gray-300 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent text-sm transition-all"
+                    className={`flex-1 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent text-sm transition-all ${
+                      isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
                   />
                   <button
                     type="submit"

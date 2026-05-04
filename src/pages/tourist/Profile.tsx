@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, Phone, MapPin, Globe, Camera, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -7,6 +7,9 @@ export default function Profile() {
   const { user, updateUser } = useAuth() as any;
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Mock state for form fields
   const [formData, setFormData] = useState({
@@ -54,7 +57,19 @@ export default function Profile() {
       }
     });
 
+    if (avatarFile) {
+      changes.push('Profile Picture');
+    }
+
     return changes;
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,6 +90,28 @@ export default function Profile() {
 
     try {
       const token = localStorage.getItem('tourmate_token');
+
+      let updatedAvatarUrl = user?.avatar;
+
+      if (avatarFile) {
+        const imgData = new FormData();
+        imgData.append('file', avatarFile);
+        const avatarRes = await fetch('http://localhost:5066/api/users/me/avatar', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: imgData
+        });
+
+        if (avatarRes.ok) {
+          const avatarData = await avatarRes.json();
+          updatedAvatarUrl = avatarData.avatarUrl;
+        } else {
+          toast.error("Failed to upload profile picture");
+        }
+      }
+
       const response = await fetch('http://localhost:5066/api/users/me', {
         method: 'PUT',
         headers: {
@@ -85,15 +122,18 @@ export default function Profile() {
           name: formData.name,
           phone: formData.phone,
           nationality: formData.nationality,
-          bio: formData.bio
+          bio: formData.bio,
+          avatar: updatedAvatarUrl
         })
       });
 
       if (response.ok) {
         setIsEditing(false);
+        setAvatarFile(null);
         const updatedUser = {
           ...user,
-          ...formData
+          ...formData,
+          avatar: updatedAvatarUrl
         };
         updateUser(updatedUser);
 
@@ -133,15 +173,26 @@ export default function Profile() {
           <div className="relative flex justify-between items-end -mt-12 mb-6">
             <div className="relative">
               <img
-                src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name}`}
+                src={avatarPreview || user?.avatar || `https://ui-avatars.com/api/?name=${user?.name}`}
                 alt={user?.name}
                 className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover"
               />
               {isEditing && (
-                <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-forest-600">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-forest-600"
+                >
                   <Camera size={16} />
                 </button>
               )}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleAvatarChange} 
+                accept="image/*" 
+                className="hidden" 
+              />
             </div>
             {!isEditing && (
               <button

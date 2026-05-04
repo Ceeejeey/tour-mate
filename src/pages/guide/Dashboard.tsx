@@ -1,36 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MOCK_BOOKINGS, MOCK_REVIEWS } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 import { Users, Calendar, DollarSign, Star, TrendingUp, Clock, MapPin, TreePine, Navigation, Loader2 } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
 import { Guide } from '../../types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, PieChart, Pie } from 'recharts';
-
-const mockEarningsData = [
-  { name: 'Mon', earnings: 150 },
-  { name: 'Tue', earnings: 230 },
-  { name: 'Wed', earnings: 180 },
-  { name: 'Thu', earnings: 290 },
-  { name: 'Fri', earnings: 340 },
-  { name: 'Sat', earnings: 480 },
-  { name: 'Sun', earnings: 380 },
-];
-
-const mockBookingsData = [
-  { name: 'Completed', value: 45, color: '#10b981' }, // green-500
-  { name: 'Pending', value: 12, color: '#f59e0b' },   // amber-500
-  { name: 'Cancelled', value: 3, color: '#ef4444' },  // red-500
-];
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
   const { user, updateUser } = useAuth();
   const guideUser = user as Guide | null;
 
-  const guideId = user?.id || 'g1';
-  const myBookings = MOCK_BOOKINGS.filter(b => b.guideId === guideId);
-  const myReviews = MOCK_REVIEWS.filter(r => r.guideId === guideId);
+  const [myBookings, setMyBookings] = useState<any[]>([]);
+  const [myReviews, setMyReviews] = useState<any[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
+  // Status and location state
   const [isAvailable, setIsAvailable] = useState(guideUser?.isAvailable || false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     guideUser?.latitude && guideUser?.longitude 
@@ -41,6 +26,32 @@ export default function Dashboard() {
   const [isLocating, setIsLocating] = useState(false);
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('tourmate_token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        const [bookingsRes, reviewsRes] = await Promise.all([
+          fetch('http://localhost:5066/api/bookings', { headers }),
+          fetch('http://localhost:5066/api/reviews/guide', { headers })
+        ]);
+
+        const bookings = bookingsRes.ok ? await bookingsRes.json() : [];
+        const reviews = reviewsRes.ok ? await reviewsRes.json() : [];
+
+        setMyBookings(bookings || []);
+        setMyReviews(reviews || []);
+      } catch (err) {
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   // Sync state if user context updates remotely
   useEffect(() => {
@@ -54,10 +65,26 @@ export default function Dashboard() {
 
   const totalBookings = myBookings.length;
   const totalEarnings = myBookings
-    .filter(b => b.status === 'completed')
+    .filter(b => b.status === 'completed' || b.status === 'paid')
     .reduce((sum, b) => sum + b.totalPrice, 0);
   const averageRating = myReviews.reduce((sum, r) => sum + r.rating, 0) / myReviews.length || 0;
   const pendingRequests = myBookings.filter(b => b.status === 'pending').length;
+
+  const mockEarningsData = [
+    { name: 'Mon', earnings: totalEarnings * 0.1 },
+    { name: 'Tue', earnings: totalEarnings * 0.15 },
+    { name: 'Wed', earnings: totalEarnings * 0.2 },
+    { name: 'Thu', earnings: totalEarnings * 0.1 },
+    { name: 'Fri', earnings: totalEarnings * 0.25 },
+    { name: 'Sat', earnings: totalEarnings * 0.15 },
+    { name: 'Sun', earnings: totalEarnings * 0.05 },
+  ];
+
+  const bookingsData = [
+    { name: 'Completed', value: myBookings.filter(b => b.status === 'completed' || b.status === 'paid').length, color: '#10b981' },
+    { name: 'Pending', value: pendingRequests, color: '#f59e0b' },
+    { name: 'Cancelled', value: myBookings.filter(b => b.status === 'cancelled').length, color: '#ef4444' },
+  ];
 
   const stats = [
     { label: 'Total Bookings', value: totalBookings, icon: Calendar, color: 'bg-forest-500', lightBg: 'bg-forest-50', textColor: 'text-forest-600' },
@@ -266,7 +293,7 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={mockBookingsData}
+                  data={bookingsData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -274,7 +301,7 @@ export default function Dashboard() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {mockBookingsData.map((entry, index) => (
+                  {bookingsData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -289,7 +316,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex justify-center gap-4 mt-2">
-            {mockBookingsData.map((entry, index) => (
+            {bookingsData.map((entry, index) => (
               <div key={index} className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
                 <span className="text-xs font-medium text-gray-600">{entry.name}</span>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, Phone, MapPin, Languages, Award, Upload, Camera, Navigation, Loader2 } from 'lucide-react';
 import { Guide } from '../../types';
@@ -8,6 +8,9 @@ export default function Profile() {
   const { user, updateUser } = useAuth() as any;
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Mock state for form fields - casting user to Guide for demo purposes
   // In a real app, we'd have proper type guards
@@ -93,8 +96,20 @@ export default function Profile() {
       changes.push('Location');
     }
 
+    if (avatarFile) {
+      changes.push('Profile Picture');
+    }
+
     // Remove duplicates
     return [...new Set(changes)];
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleAvailabilityToggle = () => {
@@ -131,6 +146,28 @@ export default function Profile() {
 
     try {
       const token = localStorage.getItem('tourmate_token');
+
+      let updatedAvatarUrl = guideUser?.avatar;
+
+      if (avatarFile) {
+        const imgData = new FormData();
+        imgData.append('file', avatarFile);
+        const avatarRes = await fetch('http://localhost:5066/api/users/me/avatar', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: imgData
+        });
+
+        if (avatarRes.ok) {
+          const avatarData = await avatarRes.json();
+          updatedAvatarUrl = avatarData.avatarUrl;
+        } else {
+          toast.error("Failed to upload profile picture");
+        }
+      }
+
       const response = await fetch('http://localhost:5066/api/users/me', {
         method: 'PUT',
         headers: {
@@ -141,16 +178,19 @@ export default function Profile() {
           ...formData,
           isAvailable,
           latitude,
-          longitude
+          longitude,
+          avatar: updatedAvatarUrl
         })
       });
 
       if (response.ok) {
         setIsEditing(false);
+        setAvatarFile(null);
         const updatedUser = {
           ...guideUser,
           ...formData,
           languages: formData.languages.split(',').map((s: string)=>s.trim()),
+          avatar: updatedAvatarUrl,
           isAvailable, latitude, longitude
         };
         updateUser(updatedUser);
@@ -233,15 +273,26 @@ export default function Profile() {
           <div className="relative -mt-12 mb-8">
             <div className="relative inline-block">
               <img
-                src={guideUser?.avatar || `https://ui-avatars.com/api/?name=${guideUser?.name}`}
+                src={avatarPreview || guideUser?.avatar || `https://ui-avatars.com/api/?name=${guideUser?.name}`}
                 alt={guideUser?.name}
                 className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover"
               />
               {isEditing && (
-                <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-forest-600">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-forest-600"
+                >
                   <Camera size={16} />
                 </button>
               )}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleAvatarChange} 
+                accept="image/*" 
+                className="hidden" 
+              />
             </div>
           </div>
 
