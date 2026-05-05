@@ -62,7 +62,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const prevCountRef = useRef(0);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || user.role === 'admin') return;
 
     let isMounted = true;
     
@@ -190,82 +190,84 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
             {/* Right Actions */}
             <div className="flex items-center gap-2 relative">
-              {/* Notification Bell & Dropdown */}
-              <div ref={notificationRef}>
-                <button 
-                  onClick={handleToggleNotifications}
-                  className={cn(
-                    "relative p-2 text-forest-500 hover:text-forest-700 hover:bg-forest-50 rounded-lg transition-colors",
-                    isNotificationOpen && "bg-forest-50 text-forest-700"
-                  )}
-                  title="Notifications"
-                >
-                  <Bell size={20} />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-earth-500 text-[9px] font-bold text-white">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
+              {/* Notification Bell & Dropdown (Hidden for Admins) */}
+              {user?.role !== 'admin' && (
+                <div ref={notificationRef}>
+                  <button 
+                    onClick={handleToggleNotifications}
+                    className={cn(
+                      "relative p-2 text-forest-500 hover:text-forest-700 hover:bg-forest-50 rounded-lg transition-colors",
+                      isNotificationOpen && "bg-forest-50 text-forest-700"
+                    )}
+                    title="Notifications"
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-earth-500 text-[9px] font-bold text-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
 
-                {/* Dropdown Menu */}
-                {isNotificationOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-forest-100 overflow-hidden transform opacity-100 scale-100 transition-all origin-top-right z-50">
-                    <div className="px-4 py-3 bg-forest-50 border-b border-forest-100">
-                      <h3 className="font-bold text-forest-900">Notifications</h3>
-                    </div>
-                    
-                    <div className="max-h-80 overflow-y-auto">
-                      {notifications.length > 0 ? (
-                        <div className="divide-y divide-forest-50">
-                          {notifications.map((notif: any) => (
-                            <div 
-                              key={notif.id} 
-                              className={cn(
-                                "px-4 py-3 transition-colors cursor-pointer",
-                                readIds.includes(notif.id) ? "bg-white hover:bg-forest-50" : "bg-blue-50/50 hover:bg-blue-50"
-                              )}
-                              onClick={() => {
-                                setIsNotificationOpen(false);
-                                navigate(`/${user?.role}/bookings`);
-                              }}
-                            >
-                              <div className="flex justify-between items-start">
-                                <p className="text-sm text-forest-800 font-medium">
-                                  {notif.message}
-                                </p>
-                                {!readIds.includes(notif.id) && (
-                                  <span className="w-2 h-2 mt-1.5 rounded-full bg-earth-500 flex-shrink-0" />
+                  {/* Dropdown Menu */}
+                  {isNotificationOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-forest-100 overflow-hidden transform opacity-100 scale-100 transition-all origin-top-right z-50">
+                      <div className="px-4 py-3 bg-forest-50 border-b border-forest-100">
+                        <h3 className="font-bold text-forest-900">Notifications</h3>
+                      </div>
+                      
+                      <div className="max-h-80 overflow-y-auto">
+                        {notifications.length > 0 ? (
+                          <div className="divide-y divide-forest-50">
+                            {notifications.map((notif: any) => (
+                              <div 
+                                key={notif.id} 
+                                className={cn(
+                                  "px-4 py-3 transition-colors cursor-pointer",
+                                  readIds.includes(notif.id) ? "bg-white hover:bg-forest-50" : "bg-blue-50/50 hover:bg-blue-50"
                                 )}
+                                onClick={() => {
+                                  setIsNotificationOpen(false);
+                                  navigate(`/${user?.role}/bookings`);
+                                }}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <p className="text-sm text-forest-800 font-medium">
+                                    {notif.message}
+                                  </p>
+                                  {!readIds.includes(notif.id) && (
+                                    <span className="w-2 h-2 mt-1.5 rounded-full bg-earth-500 flex-shrink-0" />
+                                  )}
+                                </div>
+                                <p className="text-xs text-forest-500 mt-1">
+                                  {formatDateTime(notif.date)}
+                                </p>
                               </div>
-                              <p className="text-xs text-forest-500 mt-1">
-                                {formatDateTime(notif.date)}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="px-4 py-6 text-center">
-                          <Leaf className="w-8 h-8 text-forest-200 mx-auto mb-2" />
-                          <p className="text-sm text-forest-500">No new notifications</p>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="px-4 py-6 text-center">
+                            <Leaf className="w-8 h-8 text-forest-200 mx-auto mb-2" />
+                            <p className="text-sm text-forest-500">No new notifications</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {notifications.length > 0 && (
+                        <div 
+                          className="px-4 py-2 border-t border-forest-100 bg-gray-50 text-center cursor-pointer hover:bg-forest-50 transition-colors"
+                          onClick={() => {
+                            setIsNotificationOpen(false);
+                            navigate(`/${user?.role}/bookings`);
+                          }}
+                        >
+                          <span className="text-xs font-semibold text-forest-700">View All Bookings</span>
                         </div>
                       )}
                     </div>
-                    
-                    {notifications.length > 0 && (
-                      <div 
-                        className="px-4 py-2 border-t border-forest-100 bg-gray-50 text-center cursor-pointer hover:bg-forest-50 transition-colors"
-                        onClick={() => {
-                          setIsNotificationOpen(false);
-                          navigate(`/${user?.role}/bookings`);
-                        }}
-                      >
-                        <span className="text-xs font-semibold text-forest-700">View All Bookings</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               {/* User Quick Info */}
               <div className="hidden sm:flex items-center gap-3 ml-2 pl-3 border-l border-forest-100">
