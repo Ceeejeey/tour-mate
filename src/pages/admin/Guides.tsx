@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 
 export default function Guides() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
   const [guides, setGuides] = useState<Guide[]>([]);
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,10 +38,22 @@ export default function Guides() {
     }
   };
 
-  const filteredGuides = guides.filter(guide =>
-    guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    guide.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const newestGuideIds = [...guides]
+    .sort((a, b) => Number(b.id) - Number(a.id))
+    .slice(0, 3)
+    .map(g => g.id);
+
+  const filteredGuides = guides
+    .filter(guide =>
+      guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      guide.email.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (sortBy === 'newest') return Number(b.id) - Number(a.id);
+      if (sortBy === 'oldest') return Number(a.id) - Number(b.id);
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      return 0;
+    });
 
   const toggleVerification = async (id: string) => {
     try {
@@ -86,8 +99,8 @@ export default function Guides() {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="mb-8 flex gap-4">
+      {/* Search and Sort Bar */}
+      <div className="mb-8 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
@@ -98,6 +111,15 @@ export default function Guides() {
           />
           <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
         </div>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-forest-500 focus:border-transparent bg-white text-gray-700 outline-none cursor-pointer transition-all"
+        >
+          <option value="newest">Sort by: Newest</option>
+          <option value="oldest">Sort by: Oldest</option>
+          <option value="name">Sort by: Name (A-Z)</option>
+        </select>
       </div>
 
       {error ? (
@@ -147,7 +169,14 @@ export default function Guides() {
                           className="w-11 h-11 rounded-full object-cover border-2 border-forest-100 shadow-sm"
                         />
                         <div>
-                          <div className="font-semibold text-gray-900">{guide.name}</div>
+                          <div className="font-semibold text-gray-900 flex items-center gap-2">
+                            {guide.name}
+                            {newestGuideIds.includes(guide.id) && (
+                              <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border border-blue-200">
+                                New
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-gray-500 font-mono">{guide.email}</div>
                         </div>
                       </div>

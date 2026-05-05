@@ -28,7 +28,7 @@ export default function TouristMapModal({ isOpen, onClose, tourist }: TouristMap
   if (!isOpen) return null;
 
   // Simple fallbacks if no location
-  const hasLocation = tourist.latitude !== undefined && tourist.longitude !== undefined;
+  const hasLocation = tourist.latitude != null && tourist.longitude != null && !(tourist.latitude === 0 && tourist.longitude === 0);
   const lat = tourist.latitude || 0;
   const lng = tourist.longitude || 0;
 

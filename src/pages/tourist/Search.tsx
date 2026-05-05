@@ -104,7 +104,7 @@ export default function FindGuides() {
 
     let matchesDistance = true;
     if (filterByDistance && userLocation) {
-      if (!guide.latitude || !guide.longitude) {
+      if (guide.latitude == null || guide.longitude == null || (guide.latitude === 0 && guide.longitude === 0)) {
         // If guide has no location, they don't match the distance filter
         matchesDistance = false;
       } else {

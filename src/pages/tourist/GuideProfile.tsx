@@ -7,10 +7,12 @@ import { Guide } from '../../types';
 import NotFound from '../NotFound';
 import { formatCurrency } from '../../lib/utils';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 export default function GuideProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, updateUser } = useAuth();
   
   const [guide, setGuide] = useState<Guide | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,6 +21,9 @@ export default function GuideProfile() {
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasPendingBooking, setHasPendingBooking] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [pendingBookingAction, setPendingBookingAction] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,18 +84,27 @@ export default function GuideProfile() {
   const serviceFee = sessionPrice * 0.05;
   const total = sessionPrice + serviceFee;
 
-  const handleBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!guide || hasPendingBooking) return;
-
-    const token = localStorage.getItem('tourmate_token');
-    if (!token) {
-      navigate('/login');
-      return;
+  const hasValidLocation = (lat: any, lng: any) => {
+    console.log('[DEBUG GuideProfile] Validating coordinates:', { lat, lng });
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+    
+    if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLng)) {
+      console.log('[DEBUG GuideProfile] Location invalid, not finite numbers');
+      return false;
     }
+    if (parsedLat === 0 && parsedLng === 0) {
+      console.log('[DEBUG GuideProfile] Location invalid, coordinates are 0');
+      return false;
+    }
+    return true;
+  };
 
+  const createBooking = async () => {
+    if (!guide) return;
     setIsSubmitting(true);
     try {
+      const token = localStorage.getItem('tourmate_token');
       const response = await fetch('http://localhost:5066/api/bookings', {
         method: 'POST',
         headers: {
@@ -118,6 +132,87 @@ export default function GuideProfile() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guide || hasPendingBooking) return;
+
+    const token = localStorage.getItem('tourmate_token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    console.log('[DEBUG GuideProfile] Submit clicked. Current user object:', user);
+
+    const currentLat = user?.latitude ?? (user as any)?.Latitude;
+    const currentLng = user?.longitude ?? (user as any)?.Longitude;
+
+    console.log('[DEBUG GuideProfile] Attempting to book with location:', { currentLat, currentLng });
+
+    if (!hasValidLocation(currentLat, currentLng)) {
+      console.log('[DEBUG GuideProfile] Location rejected, opening modal.');
+      setPendingBookingAction(true);
+      setIsLocationModalOpen(true);
+      toast.error('Please share your location to continue booking.');
+      return;
+    }
+
+    await createBooking();
+  };
+
+  const handleCaptureLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const token = localStorage.getItem('tourmate_token');
+          const response = await fetch('http://localhost:5066/api/users/me/location', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ latitude, longitude })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to update location');
+          }
+
+          if (user) {
+            updateUser({ ...user, latitude, longitude });
+          }
+
+          toast.success('Location saved. Completing your booking...');
+          setIsLocationModalOpen(false);
+
+          if (pendingBookingAction) {
+            setPendingBookingAction(false);
+            await createBooking();
+          }
+        } catch (err: any) {
+          toast.error(err?.message || 'Failed to save location');
+          console.error('Error updating location:', err);
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        toast.error('Unable to retrieve your location');
+        console.error('Error getting location:', error);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   return (
@@ -321,6 +416,47 @@ export default function GuideProfile() {
           </div>
         </div>
       </div>
+
+      {/* Location Modal */}
+      {isLocationModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 relative border border-gray-100 shadow-xl">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="h-10 w-10 rounded-full bg-forest-50 flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-forest-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Share Your Location</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  We need your current location so the guide can see where to meet you.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 mt-6">
+              <button
+                onClick={handleCaptureLocation}
+                disabled={isLocating}
+                className="w-full flex items-center justify-center gap-2 bg-forest-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-forest-700 disabled:opacity-50 transition-colors"
+              >
+                {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <MapPin className="w-5 h-5" />}
+                {isLocating ? 'Locating...' : 'Share Current Location'}
+              </button>
+              
+              <button
+                onClick={() => {
+                  setIsLocationModalOpen(false);
+                  setPendingBookingAction(false);
+                }}
+                disabled={isLocating}
+                className="w-full py-3 px-4 rounded-xl font-medium text-gray-600 border border-gray-300 hover:bg-gray-50 transition-colors"
+              >
+                Cancel Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

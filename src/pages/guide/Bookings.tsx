@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Booking } from '../../types';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
-import { Check, X, Calendar, DollarSign, MessageCircle, Loader2, MapPin, AlertCircle, Users, TrendingUp } from 'lucide-react';
+import { Check, X, Calendar, DollarSign, MessageCircle, Loader2, MapPin, AlertCircle, Users, TrendingUp, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import TouristMapModal from '../../components/guide/TouristMapModal';
@@ -147,9 +147,15 @@ export default function Bookings() {
                           />
                           <div>
                             <h3 className="font-bold text-gray-900 text-lg">{tourist.name}</h3>
-                            <div className="text-sm text-gray-500 mt-1 flex items-center gap-1">
-                              <MapPin size={14} />
-                              {tourist.phone || 'No Phone'}
+                            <div className="text-sm text-gray-500 mt-1 flex flex-col gap-1">
+                              <div className="flex items-center gap-1">
+                                <Phone size={14} />
+                                {tourist.phone || 'No Phone'}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <MapPin size={14} />
+                                {((tourist.latitude ?? (tourist as any).Latitude) != null && (tourist.longitude ?? (tourist as any).Longitude) != null && !((tourist.latitude ?? (tourist as any).Latitude) === 0 && (tourist.longitude ?? (tourist as any).Longitude) === 0)) ? `${(tourist.latitude ?? (tourist as any).Latitude).toFixed(4)}, ${(tourist.longitude ?? (tourist as any).Longitude).toFixed(4)}` : 'Location not provided'}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -217,8 +223,8 @@ export default function Bookings() {
                           onClick={() => setSelectedTouristForMap({
                             name: tourist.name,
                             phone: tourist.phone,
-                            latitude: tourist.latitude,
-                            longitude: tourist.longitude
+                            latitude: tourist.latitude ?? (tourist as any).Latitude,
+                            longitude: tourist.longitude ?? (tourist as any).Longitude
                           })}
                           className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 border-2 border-indigo-100 text-sm font-medium rounded-lg hover:bg-indigo-100 transition-colors w-full"
                         >

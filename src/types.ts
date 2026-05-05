@@ -8,6 +8,8 @@ export interface User {
   phone?: string;
   nationality?: string;
   avatar?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Guide extends User {

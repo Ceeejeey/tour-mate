@@ -13,7 +13,8 @@ export const formatCurrency = (amount: number) => {
 };
 
 export const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  const dateStr = dateString.endsWith('Z') || dateString.includes('+') ? dateString : `${dateString}Z`;
+  return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -21,7 +22,8 @@ export const formatDate = (dateString: string) => {
 };
 
 export const formatDateTime = (isoString: string) => {
-  return new Date(isoString).toLocaleString('en-US', {
+  const dateStr = isoString.endsWith('Z') || isoString.includes('+') ? isoString : `${isoString}Z`;
+  return new Date(dateStr).toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

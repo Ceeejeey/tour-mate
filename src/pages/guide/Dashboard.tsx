@@ -142,7 +142,7 @@ export default function Dashboard() {
               'Authorization': `Bearer ${token}`
             },
             // The backend expects PascalCase naming as per DTOs
-            body: JSON.stringify({ Latitude: latitude, Longitude: longitude })
+            body: JSON.stringify({ latitude, longitude })
           });
           
           if (!res.ok) throw new Error("Failed to update location");

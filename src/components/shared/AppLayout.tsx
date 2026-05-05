@@ -34,12 +34,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  const [pendingBookings, setPendingBookings] = useState<any[]>([]);
+
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   
-  const pendingBookingsCount = pendingBookings.length;
-  const prevBookingsCountRef = useRef(0);
+
+
 
   // Close notification dropdown when clicking outside
   useEffect(() => {
@@ -52,40 +52,79 @@ export default function AppLayout({ children }: AppLayoutProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [readIds, setReadIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('tourmate_read_notifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const unreadCount = notifications.filter(n => !readIds.includes(n.id)).length;
+  const prevCountRef = useRef(0);
+
   useEffect(() => {
-    if (!user || user.role !== 'guide') return;
+    if (!user) return;
 
     let isMounted = true;
     
-    const checkForNewBookings = async () => {
+    const fetchNotifications = async () => {
       try {
         const token = localStorage.getItem('tourmate_token');
         if (!token) return;
 
         const response = await fetch('http://localhost:5066/api/bookings', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
         
         if (response.ok) {
           const bookings = await response.json();
-          const pending = bookings.filter((b: any) => b.status === 'pending');
-          const currentCount = pending.length;
           
           if (isMounted) {
-            setPendingBookings(pending);
+            // Generate notification nodes per booking
+            const notifs = bookings.map((b: any) => {
+              const nId = `${b.id}-${b.status}`; // unique for status changes
+              let message = '';
+              
+              if (user.role === 'guide') {
+                if (b.status === 'pending') message = `New Request from ${b.tourist?.name}`;
+                else if (b.status === 'cancelled') message = `Booking cancelled by ${b.tourist?.name}`;
+                else message = `Booking ${b.status} with ${b.tourist?.name}`;
+              } else {
+                if (b.status === 'confirmed') message = `${b.guide?.name} accepted your request!`;
+                else if (b.status === 'cancelled') message = `Booking cancelled involving ${b.guide?.name}`;
+                else if (b.status === 'pending') message = `Request sent to ${b.guide?.name}`;
+                else message = `Booking ${b.status} with ${b.guide?.name}`;
+              }
 
-            if (currentCount > prevBookingsCountRef.current && prevBookingsCountRef.current !== 0) {
-              const newBookingsCount = currentCount - prevBookingsCountRef.current;
-              toast.success(`You have ${newBookingsCount} new booking request(s)!`, {
-                icon: '🔔',
-                duration: 5000,
-                position: 'top-right'
-              });
+              return {
+                id: nId,
+                bookingId: b.id,
+                message,
+                status: b.status,
+                date: b.bookingDate
+              };
+            });
+
+            // Sort by latest first
+            notifs.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            
+            setNotifications(notifs);
+
+            const currentTotal = notifs.length;
+            if (currentTotal > prevCountRef.current && prevCountRef.current !== 0) {
+              // Find completely new unread items compared to last poll
+              const previouslyRead = JSON.parse(localStorage.getItem('tourmate_read_notifications') || '[]');
+              const newUnread = notifs.filter((n: any) => !previouslyRead.includes(n.id));
+              
+              if (newUnread.length > 0) {
+                toast.success(`You have a new update: ${newUnread[0].message}`, {
+                  icon: '🔔',
+                  duration: 5000,
+                  position: 'top-right'
+                });
+              }
             }
             
-            prevBookingsCountRef.current = currentCount;
+            prevCountRef.current = currentTotal;
           }
         }
       } catch (error) {
@@ -93,16 +132,27 @@ export default function AppLayout({ children }: AppLayoutProps) {
       }
     };
 
-    checkForNewBookings();
-    
-    // Poll every 15 seconds
-    const intervalId = setInterval(checkForNewBookings, 15000);
-
+    fetchNotifications();
+    const intervalId = setInterval(fetchNotifications, 15000);
     return () => {
       isMounted = false;
       clearInterval(intervalId);
     };
   }, [user]);
+
+  const handleToggleNotifications = () => {
+    const newState = !isNotificationOpen;
+    setIsNotificationOpen(newState);
+
+    if (newState) {
+      // Mark all as read when opening
+      const allNotificationIds = notifications.map(n => n.id);
+      const updatedReads = Array.from(new Set([...readIds, ...allNotificationIds]));
+      
+      setReadIds(updatedReads);
+      localStorage.setItem('tourmate_read_notifications', JSON.stringify(updatedReads));
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -143,7 +193,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               {/* Notification Bell & Dropdown */}
               <div ref={notificationRef}>
                 <button 
-                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                  onClick={handleToggleNotifications}
                   className={cn(
                     "relative p-2 text-forest-500 hover:text-forest-700 hover:bg-forest-50 rounded-lg transition-colors",
                     isNotificationOpen && "bg-forest-50 text-forest-700"
@@ -151,9 +201,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   title="Notifications"
                 >
                   <Bell size={20} />
-                  {pendingBookingsCount > 0 && (
+                  {unreadCount > 0 && (
                     <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-earth-500 text-[9px] font-bold text-white">
-                      {pendingBookingsCount}
+                      {unreadCount}
                     </span>
                   )}
                 </button>
@@ -166,22 +216,30 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     </div>
                     
                     <div className="max-h-80 overflow-y-auto">
-                      {pendingBookingsCount > 0 ? (
+                      {notifications.length > 0 ? (
                         <div className="divide-y divide-forest-50">
-                          {pendingBookings.map((booking, idx) => (
+                          {notifications.map((notif: any) => (
                             <div 
-                              key={booking.id || idx} 
-                              className="px-4 py-3 hover:bg-forest-50 transition-colors cursor-pointer"
+                              key={notif.id} 
+                              className={cn(
+                                "px-4 py-3 transition-colors cursor-pointer",
+                                readIds.includes(notif.id) ? "bg-white hover:bg-forest-50" : "bg-blue-50/50 hover:bg-blue-50"
+                              )}
                               onClick={() => {
                                 setIsNotificationOpen(false);
-                                navigate('/guide/bookings');
+                                navigate(`/${user?.role}/bookings`);
                               }}
                             >
-                              <p className="text-sm text-forest-800 font-medium">
-                                New Request from <span className="text-forest-900 font-bold">{booking.tourist?.name || 'Tourist'}</span>
-                              </p>
+                              <div className="flex justify-between items-start">
+                                <p className="text-sm text-forest-800 font-medium">
+                                  {notif.message}
+                                </p>
+                                {!readIds.includes(notif.id) && (
+                                  <span className="w-2 h-2 mt-1.5 rounded-full bg-earth-500 flex-shrink-0" />
+                                )}
+                              </div>
                               <p className="text-xs text-forest-500 mt-1">
-                                For {formatDateTime(booking.bookingDate)}
+                                {formatDateTime(notif.date)}
                               </p>
                             </div>
                           ))}
@@ -194,12 +252,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                       )}
                     </div>
                     
-                    {pendingBookingsCount > 0 && (
+                    {notifications.length > 0 && (
                       <div 
                         className="px-4 py-2 border-t border-forest-100 bg-gray-50 text-center cursor-pointer hover:bg-forest-50 transition-colors"
                         onClick={() => {
                           setIsNotificationOpen(false);
-                          navigate('/guide/bookings');
+                          navigate(`/${user?.role}/bookings`);
                         }}
                       >
                         <span className="text-xs font-semibold text-forest-700">View All Bookings</span>
