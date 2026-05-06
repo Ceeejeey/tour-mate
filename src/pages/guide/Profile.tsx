@@ -25,6 +25,7 @@ export default function Profile() {
     experience: guideUser?.experience || '',
     bio: guideUser?.bio || '',
     pricePerSession: guideUser?.pricePerSession || 50,
+    skills: guideUser?.skills?.join(', ') || '',
   });
 
   const [isAvailable, setIsAvailable] = useState(guideUser?.isAvailable ?? true);
@@ -46,6 +47,7 @@ export default function Profile() {
     isAvailable: guideUser?.isAvailable ?? true,
     latitude: guideUser?.latitude || null,
     longitude: guideUser?.longitude || null,
+    skills: guideUser?.skills?.join(', ') || '',
   });
 
   const handleEditClick = () => {
@@ -76,6 +78,7 @@ export default function Profile() {
       experience: 'Experience',
       bio: 'Bio',
       pricePerSession: 'Price per session',
+      skills: 'Expertise',
       isAvailable: 'Availability status',
       latitude: 'Location',
       longitude: 'Location'
@@ -189,7 +192,8 @@ export default function Profile() {
         const updatedUser = {
           ...guideUser,
           ...formData,
-          languages: formData.languages.split(',').map((s: string)=>s.trim()),
+          languages: formData.languages.split(',').map((s: string)=>s.trim()).filter(Boolean),
+          skills: formData.skills.split(',').map((s: string)=>s.trim()).filter(Boolean),
           avatar: updatedAvatarUrl,
           isAvailable, latitude, longitude
         };
@@ -503,6 +507,18 @@ export default function Profile() {
                   value={formData.bio}
                   onChange={(e) => setFormData({...formData, bio: e.target.value})}
                   className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 disabled:bg-gray-50 disabled:text-gray-500"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Expertise (Comma separated)</label>
+                <input
+                  type="text"
+                  disabled={!isEditing}
+                  value={formData.skills}
+                  onChange={(e) => setFormData({...formData, skills: e.target.value})}
+                  className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-forest-500 focus:border-forest-600 disabled:bg-gray-50 disabled:text-gray-500"
+                  placeholder="History, Local Food, Hiking, Photography"
                 />
               </div>
             </div>

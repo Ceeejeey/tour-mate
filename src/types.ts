@@ -10,6 +10,7 @@ export interface User {
   avatar?: string;
   latitude?: number;
   longitude?: number;
+  createdAt?: string;
 }
 
 export interface Guide extends User {

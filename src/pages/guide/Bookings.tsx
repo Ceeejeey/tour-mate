@@ -162,7 +162,7 @@ export default function Bookings() {
                       </div>
 
                       {/* Booking Details */}
-                      <div className="md:col-span-2 grid grid-cols-3 gap-4">
+                      <div className="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">Booking Date</p>
                           <div className="flex items-center gap-2 text-gray-900 font-semibold">
@@ -177,6 +177,16 @@ export default function Bookings() {
                         <div>
                           <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">Status</p>
                           <StatusBadge status={booking.status} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1">Payment</p>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' :
+                            booking.paymentStatus === 'refunded' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {booking.paymentStatus ? booking.paymentStatus.charAt(0).toUpperCase() + booking.paymentStatus.slice(1) : 'Pending'}
+                          </span>
                         </div>
                       </div>
 

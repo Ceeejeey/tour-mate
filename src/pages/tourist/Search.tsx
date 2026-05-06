@@ -89,14 +89,20 @@ export default function FindGuides() {
     );
   };
 
-  // Extract unique languages
-  const allLanguages = Array.from(new Set(allGuides.flatMap(g => g.languages || [])));
+  // Extract unique languages (normalized to Title Case to avoid duplicates)
+  const allLanguages = Array.from(new Set(
+    allGuides.flatMap(g => g.languages || []).map(l => 
+      l.trim().charAt(0).toUpperCase() + l.trim().slice(1).toLowerCase()
+    )
+  )).sort();
 
   const filteredGuides = allGuides.filter(guide => {
     const matchesQuery = guide.name.toLowerCase().includes(query.toLowerCase()) || 
                          (guide.serviceArea || '').toLowerCase().includes(query.toLowerCase());
     const matchesLanguage = selectedLanguages.length === 0 || 
-                            selectedLanguages.some(lang => (guide.languages || []).includes(lang));
+                            selectedLanguages.some(lang => (guide.languages || []).some(gl => 
+                              gl.trim().toLowerCase() === lang.toLowerCase()
+                            ));
     const price = guide.pricePerSession || 0;
     const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
     const rating = guide.rating || 0;
