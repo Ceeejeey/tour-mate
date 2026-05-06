@@ -24,6 +24,13 @@ import TouristProfile from './pages/tourist/Profile';
 import TouristReviews from './pages/tourist/MyReviews';
 import MyComplaints from './components/shared/MyComplaints';
 
+// Public Footer Pages
+import About from './pages/public/About';
+import Contact from './pages/public/Contact';
+import Terms from './pages/public/Terms';
+import Privacy from './pages/public/Privacy';
+import PlaceholderPage from './pages/public/PlaceholderPage';
+
 // Guide Pages
 import GuideDashboard from './pages/guide/Dashboard';
 import GuideBookings from './pages/guide/Bookings';
@@ -105,6 +112,19 @@ function AppRoutes() {
         </DashboardRoute>
       } />
       <Route path="/tourist/guide/:id" element={<PublicLayout><GuideProfile /></PublicLayout>} />
+      
+      {/* Public Footer Routes */}
+      <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+      <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+      <Route path="/terms" element={<PublicLayout><Terms /></PublicLayout>} />
+      <Route path="/privacy" element={<PublicLayout><Privacy /></PublicLayout>} />
+      <Route path="/careers" element={<PublicLayout><PlaceholderPage /></PublicLayout>} />
+      <Route path="/blog" element={<PublicLayout><PlaceholderPage /></PublicLayout>} />
+      <Route path="/press" element={<PublicLayout><PlaceholderPage /></PublicLayout>} />
+      <Route path="/help-center" element={<PublicLayout><PlaceholderPage /></PublicLayout>} />
+      <Route path="/safety" element={<PublicLayout><PlaceholderPage /></PublicLayout>} />
+      <Route path="/cancellation" element={<PublicLayout><PlaceholderPage /></PublicLayout>} />
+      <Route path="/sitemap" element={<PublicLayout><PlaceholderPage /></PublicLayout>} />
       
       {/* Tourist Dashboard Routes - app layout with sidebar */}
       <Route path="/tourist/bookings" element={

@@ -15,6 +15,7 @@ export default function GuideProfile() {
   const { user, updateUser } = useAuth();
   
   const [guide, setGuide] = useState<Guide | null>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Booking states
@@ -40,6 +41,11 @@ export default function GuideProfile() {
           const guides: Guide[] = await response.json();
           const found = guides.find(g => g.id.toString() === id);
           setGuide(found || null);
+
+          if (found?.createdAt) {
+            const date = new Date(found.createdAt);
+            setJoinedDate(date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+          }
         }
 
         // If authenticated, check for pending bookings with this guide
@@ -69,9 +75,17 @@ export default function GuideProfile() {
           }
         }
 
-        if (found?.createdAt) {
-          const date = new Date(found.createdAt);
-          setJoinedDate(date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+
+        // Fetch real reviews
+        const reviewsResponse = await fetch(`http://localhost:5066/api/reviews/guide/${id}`, { headers });
+        if (reviewsResponse.ok) {
+          const realReviews = await reviewsResponse.json();
+          setReviews(realReviews);
+        } else {
+          // Fallback to mock if API fails or for legacy data if needed, 
+          // but better to just use empty array if none found
+          const mockFiltered = MOCK_REVIEWS.filter(r => r.guideId === id || r.guideId === `g${id}`);
+          setReviews(mockFiltered);
         }
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -96,8 +110,6 @@ export default function GuideProfile() {
 
   if (!guide) return <NotFound />;
 
-  const reviews = MOCK_REVIEWS.filter(r => r.guideId === guide.id.toString());
-  
   const TRAVEL_COVERS = [
     "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
     "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800",
@@ -320,9 +332,9 @@ export default function GuideProfile() {
               </div>
               
               <div className="flex items-center gap-4">
-                <StarRating rating={guide.rating || 5} count={guide.reviewCount || 1} size={24} />
+                <StarRating rating={guide.rating || 5} count={reviews.length || 1} size={24} />
                 <div className="h-4 w-px bg-gray-200 hidden md:block" />
-                <span className="text-sm font-semibold text-gray-500 uppercase tracking-widest">{guide.reviewCount || 0} Total Reviews</span>
+                <span className="text-sm font-semibold text-gray-500 uppercase tracking-widest">{reviews.length} Total Reviews</span>
               </div>
             </div>
             
@@ -432,10 +444,10 @@ export default function GuideProfile() {
                   <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                     <div className="flex items-center gap-4">
                       <div className="bg-gradient-to-br from-earth-400 to-earth-600 h-14 w-14 rounded-2xl shadow-lg flex items-center justify-center text-white text-xl font-black">
-                        {review.touristId.charAt(0).toUpperCase()}
+                        {review.touristName ? review.touristName.charAt(0).toUpperCase() : 'T'}
                       </div>
                       <div>
-                        <div className="font-black text-gray-900 text-lg">Tourist {review.touristId}</div>
+                        <div className="font-black text-gray-900 text-lg">{review.touristName || 'Anonymous Tourist'}</div>
                         <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">
                           <Calendar size={12} />
                           {review.date}

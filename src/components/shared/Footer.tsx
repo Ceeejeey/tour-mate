@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Compass, Phone, Mail, Facebook, Instagram, Twitter, MapPin } from 'lucide-react';
 
 export default function Footer() {
@@ -21,20 +22,20 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white mb-4">Company</h4>
             <ul className="space-y-2 text-sm text-forest-300">
-              <li><a href="#" className="hover:text-earth-400 transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-earth-400 transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-earth-400 transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-earth-400 transition-colors">Press</a></li>
+              <li><Link to="/about" className="hover:text-earth-400 transition-colors">About Us</Link></li>
+              <li><Link to="/careers" className="hover:text-earth-400 transition-colors">Careers</Link></li>
+              <li><Link to="/blog" className="hover:text-earth-400 transition-colors">Blog</Link></li>
+              <li><Link to="/press" className="hover:text-earth-400 transition-colors">Press</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold text-white mb-4">Support</h4>
             <ul className="space-y-2 text-sm text-forest-300">
-              <li><a href="#" className="hover:text-earth-400 transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-earth-400 transition-colors">Safety Information</a></li>
-              <li><a href="#" className="hover:text-earth-400 transition-colors">Cancellation Options</a></li>
-              <li><a href="#" className="hover:text-earth-400 transition-colors">Contact Us</a></li>
+              <li><Link to="/help-center" className="hover:text-earth-400 transition-colors">Help Center</Link></li>
+              <li><Link to="/safety" className="hover:text-earth-400 transition-colors">Safety Information</Link></li>
+              <li><Link to="/cancellation" className="hover:text-earth-400 transition-colors">Cancellation Options</Link></li>
+              <li><Link to="/contact" className="hover:text-earth-400 transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 
@@ -62,9 +63,9 @@ export default function Footer() {
         <div className="border-t border-forest-700/50 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-forest-400">&copy; 2024 TourMate. All rights reserved.</p>
           <div className="flex gap-6 text-sm text-forest-400">
-            <a href="#" className="hover:text-forest-200 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-forest-200 transition-colors">Terms</a>
-            <a href="#" className="hover:text-forest-200 transition-colors">Sitemap</a>
+            <Link to="/privacy" className="hover:text-forest-200 transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-forest-200 transition-colors">Terms</Link>
+            <Link to="/sitemap" className="hover:text-forest-200 transition-colors">Sitemap</Link>
           </div>
         </div>
       </div>
